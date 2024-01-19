@@ -1,0 +1,260 @@
+###############################################################################
+###############################################################################
+### Cellular settings for how the application connects to the network       ###
+###############################################################################
+###############################################################################
+#/* ----------------------------------------------------------------
+# * APN SELECTION
+# *
+# * THINGSTREAM SIMS:-
+# *  -   Must use 'TSUDP' for Thingstream MQTT-Anywhere.
+# *  -   USE 'TSIOT' for 'normal' internet use.
+# * 
+# * Other SIMS:-
+# *  -   Use blank string "" for network provided APN
+# *
+# * RESTRICTED APNS:-
+# *  -   In the tasks/registrationTask.c file there is a list of APNs
+# *      which are marked as 'restricted'. This means normal internet
+# *      queries are not available, like the NTP service on TSUDP APN.
+# *      Edit this list for other APNs which are restricted/limited.
+# * -------------------------------------------------------------- */
+APN NULL
+
+#/*  ----------------------------------------------------------------
+# * RADIO ACCESS TECHNOLOGY SELECTION
+# *
+# * Please use the same RAT enum from the UBXLIB uCellNetRat_t list.
+# *  ----------------------------------------------------------------*/
+# 1=GSM+GPRS, 8=LTE (LARA-R6), 10=Cat-M1, 11=NB-IoT, 14=GSM+LTE (LENA-R8)
+URAT 8
+
+#/* ----------------------------------------------------------------
+# * MNO PROFILE SELECTION
+# *
+# * Please use the MNO Profile number for the cellular module being
+# * used. See the AT command manual appendix for list
+# *
+# * Standard Profiles:
+# *    90  = Global
+# *    100 = European
+# * ----------------------------------------------------------------*/
+MNOPROFILE 90
+
+###############################################################################
+###############################################################################
+### MQTT Settings for sending the messages for the application              ###
+###############################################################################
+###############################################################################
+
+#/* ----------------------------------------------------------------
+# * This is the mosquitto test server configuration.
+# * Port 1883 has no security or authentication 
+# *
+# * ----------------------------------------------------------------/
+# MQTT profile settings
+MQTT_TYPE MQTT
+MQTT_BROKER_NAME test.mosquitto.org:1883
+MQTT_USERNAME NULL
+MQTT_PASSWORD NULL
+MQTT_CLIENTID NULL
+MQTT_KEEPALIVE NULL
+MQTT_TIMEOUT NULL
+MQTT_SECURITY FALSE
+
+#Security profile settings
+SECURITY_CERT_VALID_LEVEL 0
+SECURITY_TLS_VERSION 3
+SECURITY_CIPHER_SUITE 0
+SECURITY_CLIENT_NAME NULL
+SECURITY_CLIENT_KEY NULL
+SECURITY_SERVER_NAME_IND NULL
+
+###############################################################################
+###############################################################################
+### The commented out settings below are examples of MQTT & Security        ###
+### settings for other brokers. You can copy them to the section above      ###
+###############################################################################
+###############################################################################
+
+#/* ----------------------------------------------------------------
+# * This is the Thingstream MQTT-Anywhere broker which doesn't
+# * use any security as it is over the private APN
+# *
+# * ----------------------------------------------------------------/
+#    "MQTT_TYPE MQTT-SN",
+#    "MQTT_BROKER_NAME 10.7.0.55:2442",
+#    "MQTT_USERNAME NULL",
+#    "MQTT_PASSWORD NULL",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY FALSE",
+#    
+#    // no need to set or include these as there is no security
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME NULL",
+#    "SECURITY_CLIENT_KEY NULL",
+#    "SECURITY_SERVER_NAME_IND NULL",
+
+#/* ----------------------------------------------------------------
+# * This is the Thingstream MQTT-FLEX service configuration.
+# * Port 2443 uses TLS security with client certificate and key
+# *
+# * You will need to upload the client certificate and private key
+# * to the cellular module and note the names of the cert/keys here
+# * ----------------------------------------------------------------/
+#    "MQTT_TYPE MQTT-SN",
+#    "MQTT_BROKER_NAME mqtt-flex.thingstream.io:2443",
+#    "MQTT_USERNAME NULL",
+#    "MQTT_PASSWORD NULL",
+#    "MQTT_CLIENTID device:5378b7ce-7e8a-4fec-afc4-58eae6ca32b0",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY TRUE",
+#    
+#    // Set TLS security and specify the security
+#    // manager client certificate name and key 
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME device-5378b7ce.pem",
+#    "SECURITY_CLIENT_KEY device-5378b7ce.key",
+#    "SECURITY_SERVER_NAME_IND mqtt-flex.thingstream.io",
+
+#/* ----------------------------------------------------------------
+# * This is the Thingstream MQTT-NOW service configuration.
+# * Port 1883 doesn't use TLS security, just authentication
+# * Must provide username and password below...
+# * ----------------------------------------------------------------/
+#    "MQTT_TYPE MQTT",
+#    "MQTT_BROKER_NAME mqtt.thingstream.io:1883",
+#    "MQTT_USERNAME YOUR-USER-NAME-HERE",
+#    "MQTT_PASSWORD YOUR-PASSWORD-HERE",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",    
+#    "MQTT_SECURITY FALSE",
+#    
+#    // no need to set or include these as there is no security
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME NULL",
+#    "SECURITY_CLIENT_KEY NULL",
+#    "SECURITY_SERVER_NAME_IND NULL",
+
+#/* ----------------------------------------------------------------
+# * This is the MQTT-NOW service configuration.
+# * Port 8883 uses TLS security and authentication
+# * Must provide username and password below...
+# *
+# * ---------------------------------------------------------------/
+#    "MQTT_TYPE MQTT",
+#    "MQTT_BROKER_NAME mqtt.thingstream.io:8883",
+#    "MQTT_USERNAME YOUR-USER-NAME-HERE",
+#    "MQTT_PASSWORD YOUR-PASSWORD-HERE",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY TRUE",
+#    
+#    // Just set TLS security
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME NULL",
+#    "SECURITY_CLIENT_KEY NULL",
+#    "SECURITY_SERVER_NAME_IND NULL",
+
+#/* ----------------------------------------------------------------
+# * This is the mosquitto test server configuration.
+# * Port 1883 has no security or authentication
+# *
+# * ---------------------------------------------------------------/
+#    "MQTT_TYPE MQTT",
+#    "MQTT_BROKER_NAME test.mosquitto.org:1883",
+#    "MQTT_USERNAME NULL",
+#    "MQTT_PASSWORD NULL",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY FALSE",
+#    
+#    // no need to set or include these as there is no security
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME NULL",
+#    "SECURITY_CLIENT_KEY NULL",
+#    "SECURITY_SERVER_NAME_IND NULL",
+
+#/* ----------------------------------------------------------------
+# * This is the mosquitto test server configuration.
+# * Port 1884 uses username/password authentication only
+# * "rw" and "readwrite" for the username/password
+# * ---------------------------------------------------------------/
+#    "MQTT_TYPE MQTT",
+#    "MQTT_BROKER_NAME test.mosquitto.org:1884",
+#    "MQTT_USERNAME rw",
+#    "MQTT_PASSWORD readwrite",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY FALSE",
+#    
+#    // no need to set or include these as there is no security
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME NULL",
+#    "SECURITY_CLIENT_KEY NULL",
+#    "SECURITY_SERVER_NAME_IND NULL",
+
+#/* ----------------------------------------------------------------
+# * This is the mosquitto test server configuration.
+# * Port 8884 uses client certificate for authentication
+# *
+# * You will need to upload the client certificate and private key
+# * to the cellular module and note the names of the cert/keys here
+# * ---------------------------------------------------------------/
+#    "MQTT_TYPE MQTT",
+#    "MQTT_BROKER_NAME test.mosquitto.org:8884",
+#    "MQTT_USERNAME NULL",
+#    "MQTT_PASSWORD NULL",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY TRUE",
+#    
+#    // no need to set or include these as there is no security
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME YOUR_CLIENT_CERTIFICATE_NAME_HERE",
+#    "SECURITY_CLIENT_KEY YOUR_CLIENT_PRIVATE_KEY_HERE",
+#    "SECURITY_SERVER_NAME_IND NULL",
+
+#/* ----------------------------------------------------------------
+# * This is the mosquitto test server configuration.
+# * Port 8885 uses TLS security and username/password authentication
+# *
+# * ---------------------------------------------------------------/
+#    "MQTT_TYPE MQTT",
+#    "MQTT_BROKER_NAME test.mosquitto.org:8885",
+#    "MQTT_USERNAME rw",
+#    "MQTT_PASSWORD readwrite",
+#    "MQTT_CLIENTID NULL",
+#    "MQTT_KEEPALIVE NULL",
+#    "MQTT_TIMEOUT NULL",
+#    "MQTT_SECURITY TRUE",
+#    
+#    // Just enable TLS
+#    "SECURITY_CERT_VALID_LEVEL 0",
+#    "SECURITY_TLS_VERSION 3",
+#    "SECURITY_CIPHER_SUITE 0",
+#    "SECURITY_CLIENT_NAME NULL",
+#    "SECURITY_CLIENT_KEY NULL",
+#    "SECURITY_SERVER_NAME_IND NULL",
