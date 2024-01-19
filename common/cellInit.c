@@ -87,8 +87,12 @@ static int32_t configureRAT(void)
     }
 
     int32_t rat = uCellCfgGetRat(gCellDeviceHandle, 0);
-    if (rat == cfgRAT) return 0;
+    if (rat == cfgRAT) {
+        writeDebug("URAT already configured for %d", rat);
+        return 0;
+    }
 
+    writeDebug("Module URAT will be changed from %d to %d", rat, cfgRAT);
     int32_t errorCode = uCellCfgSetRat(gCellDeviceHandle, cfgRAT);
     if (errorCode != 0)
     {
