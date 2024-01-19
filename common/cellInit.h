@@ -26,5 +26,6 @@ void getCellularModuleInfo(void);
 
 /// @brief Publishes the cellular module information
 /// @param networkBackUpCounter     The number of times the network has come back up
-void publishCellularModuleInfo(int32_t networkBackUpCounter);
+/// @return 0 on sucess, negative on failure
+int32_t publishCellularModuleInfo(int32_t networkBackUpCounter);
 #endif

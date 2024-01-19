@@ -67,11 +67,8 @@ int32_t gnssModuleType = -1;
 // <config> which specifies the non-default "config.txt" file
 char configFileName[MAX_CONFIG_FILENAME+1];
 
-/* ----------------------------------------------------------------
- * Application Variables
- * -------------------------------------------------------------- */
-static int32_t networkBackUpCounter = 0;
-static bool prevNetworkAvailable = false;
+bool needToPublishModuleInfo = false;
+int32_t needToPublishNetworkUpCount = 0;
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -83,14 +80,11 @@ static callbackCommand_t callbacks[] = {
     {"SET_LOG_LEVEL", setAppLogLevel}
 };
 
-void checkReConnection()
+void checkReConnection(int32_t count)
 {
-    if (IS_NETWORK_AVAILABLE == true && (networkBackUpCounter == 0 || prevNetworkAvailable == false))
-    {
-        printDebug("Network is now back up");
-        publishCellularModuleInfo(networkBackUpCounter++);
-        prevNetworkAvailable = IS_NETWORK_AVAILABLE;
-    }
+    printDebug("Network is now back up [count: %d]", count);
+    needToPublishModuleInfo = publishCellularModuleInfo(count) != 0;
+    needToPublishNetworkUpCount = count;
 }
 
 /// @brief The application function(s) which are run every appDwellTime
@@ -98,7 +92,9 @@ void checkReConnection()
 bool appFunction(void)
 {
     queueMeasureNow(NULL);
-    checkReConnection();
+    if (IS_NETWORK_AVAILABLE && needToPublishModuleInfo)
+        checkReConnection(needToPublishNetworkUpCount);
+
     queueLocationNow(NULL);
 
     return true;
@@ -276,6 +272,8 @@ int main(int arge, char *argv[])
 
     signal(SIGINT, intControlC);
     printDebug("Control-C now hooked");
+
+    registerNetworkUpCallback(checkReConnection);
 
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs

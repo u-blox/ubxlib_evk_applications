@@ -67,7 +67,10 @@ static const uNetworkType_t gNetworkType = U_NETWORK_TYPE_CELL;
 // At the start of the application this is zero until the first successful
 // network registration. Until then this network manager will keep calling
 // the UBXLIB uNetworkInterfaceUp() function
-static volatile int32_t networkUpCounter = 0;
+int32_t networkUpCounter = 0;
+
+// This counts the number of times we get a denied status
+int32_t networkDeniedCounter = 0; 
 
 // This is the list of 'internet restricted' APNs. Normal internet
 // communication on these APNs is not exercised, like requesting
@@ -91,10 +94,11 @@ char pOperatorName[OPERATOR_NAME_SIZE] = "Unknown";
 int32_t operatorMcc = 0;
 int32_t operatorMnc = 0;
 
+networkUpHandler_cb networkUpCallback = NULL;
+
 /* ----------------------------------------------------------------
  * STATIC FUNCTIONS
  * -------------------------------------------------------------- */
-
 static void clearOperatorInfo(void)
 {
     strncpy(pOperatorName, "Unknown", OPERATOR_NAME_SIZE);
@@ -157,9 +161,11 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
     if (pStatus->cell.domain != U_CELL_NET_REG_DOMAIN_PS)
         return;
 
-    // count the number of times the network 'goes up'
+    // Handle the network going up 
     if (!gIsNetworkUp && isUp) {
         networkUpCounter++;
+        if(networkUpCallback != NULL)
+            networkUpCallback(networkUpCounter);
     }
 
     gIsNetworkUp = isUp;
@@ -168,11 +174,14 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
     if (isUp) {
         gAppStatus = REGISTERED;
         getNetworkInfo();
-        writeInfo("Network is Registered: %s", cellStatus == U_CELL_NET_STATUS_REGISTERED_ROAMING ? "Roaming" : "Home");
+        writeInfo("Network is Registered: %s [Up count: %d]", 
+                cellStatus == U_CELL_NET_STATUS_REGISTERED_ROAMING ? "Roaming" : "Home",
+                networkUpCounter);
     } else {
         if (cellStatus == U_CELL_NET_STATUS_REGISTRATION_DENIED) {
             gAppStatus = REGISTRATION_DENIED;
-            writeInfo("Network denied registration.");
+            networkDeniedCounter++;
+            writeInfo("Network denied registration [Denied count: %d]", networkDeniedCounter);
         } else {
             gAppStatus = REGISTRATION_UNKNOWN;
             writeInfo("Network status unknown.");
@@ -349,6 +358,11 @@ static int32_t initMutex()
 /* ----------------------------------------------------------------
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
+
+void registerNetworkUpCallback(networkUpHandler_cb callback)
+{
+    networkUpCallback = callback;
+}
 
 /// @brief Initialises the registration task
 /// @param config The task configuration structure

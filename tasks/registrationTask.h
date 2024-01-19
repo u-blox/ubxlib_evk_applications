@@ -23,6 +23,12 @@
 #define _REGISTRATION_TASK_H_
 
 /* ----------------------------------------------------------------
+ * TYPE DEFINITIONS
+ * -------------------------------------------------------------- */
+/// @brief Network Comes Up callback handler
+typedef int32_t (*networkUpHandler_cb)(int32_t);
+
+/* ----------------------------------------------------------------
  * COMMON TASK FUNCTIONS
  * -------------------------------------------------------------- */
 int32_t initNetworkRegistrationTask(taskConfig_t *config);
@@ -36,6 +42,11 @@ int32_t startNetworkRegistrationTaskLoop(commandParamsList_t *params);
 int32_t stopNetworkRegistrationTaskLoop(commandParamsList_t *params);
 
 int32_t finalizeNetworkRegistrationTask(void);
+
+/* ----------------------------------------------------------------
+ * FUNCTIONS
+ * -------------------------------------------------------------- */
+void registerNetworkUpCallback(networkUpHandler_cb callback);
 
 /* ----------------------------------------------------------------
  * QUEUE MESSAGE TYPE DEFINITIONS
