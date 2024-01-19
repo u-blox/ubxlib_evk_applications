@@ -93,8 +93,10 @@ void checkReConnection(int32_t count)
 bool appFunction(void)
 {
     queueMeasureNow(NULL);
-    if (IS_NETWORK_AVAILABLE && needToPublishModuleInfo)
+    if (IS_NETWORK_AVAILABLE && needToPublishModuleInfo) {
+        printDebug("Need to re-publish the network is back up");
         checkReConnection(needToPublishNetworkUpCount);
+    }
 
     queueLocationNow(NULL);
 

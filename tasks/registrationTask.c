@@ -94,6 +94,7 @@ char pOperatorName[OPERATOR_NAME_SIZE] = "Unknown";
 int32_t operatorMcc = 0;
 int32_t operatorMnc = 0;
 
+typedef int32_t (*networkUpHandler_cb)(int32_t);
 networkUpHandler_cb networkUpCallback = NULL;
 
 /* ----------------------------------------------------------------
@@ -163,8 +164,10 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
 
     // Handle the network going up 
     if (!gIsNetworkUp && isUp) {
+        printWarn("Network is back up again");
         networkUpCounter++;
         if(networkUpCallback != NULL)
+            printDebug("Calling network back up callback...");
             networkUpCallback(networkUpCounter);
     }
 
@@ -361,6 +364,7 @@ static int32_t initMutex()
 
 void registerNetworkUpCallback(networkUpHandler_cb callback)
 {
+    printDebug("Set callback for Network is back up");
     networkUpCallback = callback;
 }
 
