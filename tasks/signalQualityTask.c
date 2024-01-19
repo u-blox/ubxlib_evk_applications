@@ -125,7 +125,7 @@ static void measureSignalQuality(void)
             // Checking if some radio parameters are not zero is a good way
             // to determine if the network is visible and useable.
             // See macro "IS_NETWORK_AVAILABLE"
-            gIsNetworkSignalValid = (rsrp != 0) && (rsrq != 2147483647) && (rssi != 0);
+            gIsNetworkSignalValid = (rsrp != 0) && (rsrq != 2147483647) && (rssi != 0) && (rxqual != -1);
 
             snprintf(jsonBuffer, JSON_STRING_LENGTH, format, timestamp, 
                                     rsrp, rsrq, rssi, snr, rxqual, 
@@ -135,9 +135,12 @@ static void measureSignalQuality(void)
             writeAlways(jsonBuffer);
         } else {
             if (errorCode == U_CELL_ERROR_NOT_REGISTERED) {
-                writeDebug("SignalQualityTask: Not registered");
+                writeInfo("SignalQualityTask: Not registered - can't read cell info");
+            } else if (errorCode == U_ERROR_COMMON_DEVICE_ERROR) {
+                writeWarn("Radio parameter unavailable, probably no signal");
+                gIsNetworkSignalValid = false;
             } else {
-                writeWarn("Failed to read Radio Parameters %d", errorCode);
+                writeWarn("Failed to read Radio Parameters: %d", errorCode);
             }
         }
 

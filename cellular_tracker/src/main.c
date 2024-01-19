@@ -35,26 +35,14 @@
 #include "cellScanTask.h"
 
 #include <signal.h>
+#include "main.h"
 
-// Application name and version number is in the config.h file
-
-// Command line argument <ttyUART> which represents the TTY device for the cellular module
-#define MAX_TTY_UART_NAME 20
-char ttyUART[MAX_TTY_UART_NAME+1];
-
-// OR - for windows we need the comport number
-int32_t comPortNumber = 0;
-
-// Command line argument <cellModuleType> which represents the u_cell_module_type.h value
-int32_t cellModuleType = -1;
-
-// Command line argument <gnssModuleType> which represents the u_cell_module_type.h value
-int32_t gnssModuleType = -1;
-
-// Command line argument [config] which represents the configuration file to use
+/* ----------------------------------------------------------------
+ * DEFINES
+ * -------------------------------------------------------------- */
 #define CONFIGURATION_FILENAME "config.txt"
 #define MAX_CONFIG_FILENAME 200
-char configFileName[MAX_CONFIG_FILENAME+1];
+#define MAX_TTY_UART_NAME 20
 
 #define NOT_ENOUGH_ARGUMENTS -1
 #define TTY_UART_NAME_TOO_BIG -2
@@ -62,6 +50,30 @@ char configFileName[MAX_CONFIG_FILENAME+1];
 #define UNSUPPORTED_GNSS_MODULE -4
 #define CONFIG_FILENAME_TOO_BIG -5
 #define WRONG_UART_PORT_FOR_TARGET -6
+
+/* ----------------------------------------------------------------
+ * Command Line Variables
+ * -------------------------------------------------------------- */
+// <ttyUART> which represents the TTY device for the cellular module
+char ttyUART[MAX_TTY_UART_NAME+1];
+
+// OR - for windows we need the comport number
+int32_t comPortNumber = 0;
+
+// <cellModuleType> which represents the u_cell_module_type.h value
+int32_t cellModuleType = -1;
+
+// <gnssModuleType> which represents the u_cell_module_type.h value
+int32_t gnssModuleType = -1;
+
+// <config> which specifies the non-default "config.txt" file
+char configFileName[MAX_CONFIG_FILENAME+1];
+
+/* ----------------------------------------------------------------
+ * Application Variables
+ * -------------------------------------------------------------- */
+static int32_t networkBackUpCounter = 0;
+static bool prevNetworkAvailable = false;
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -73,31 +85,25 @@ static callbackCommand_t callbacks[] = {
     {"SET_LOG_LEVEL", setAppLogLevel}
 };
 
+void checkReConnection()
+{
+    if (IS_NETWORK_AVAILABLE == true && (networkBackUpCounter == 0 || prevNetworkAvailable == false))
+    {
+        printDebug("Network is now back up");
+        publishCellularModuleInfo(networkBackUpCounter++);
+        prevNetworkAvailable = IS_NETWORK_AVAILABLE;
+    }
+}
+
 /// @brief The application function(s) which are run every appDwellTime
 /// @return A flag to indicate the application should continue (true)
 bool appFunction(void)
 {
-    static int32_t networkBackUpCounter = 0;
-    static bool prevNetworkAvailable = false;
-
-    prevNetworkAvailable = IS_NETWORK_AVAILABLE;
     queueMeasureNow(NULL);
-
-    if (IS_NETWORK_AVAILABLE == true && (
-        networkBackUpCounter == 0 || prevNetworkAvailable == false)) {
-        printDebug("Network is now back up");
-        networkBackUpCounter++;
-        publishCellularModuleInfo(networkBackUpCounter);
-    }
-
+    checkReConnection();
     queueLocationNow(NULL);
 
     return true;
-}
-
-void buttonTwo(void)
-{
-    queueNetworkScan(NULL);
 }
 
 bool networkIsUp(void)
