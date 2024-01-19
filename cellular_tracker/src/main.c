@@ -23,6 +23,7 @@
  *      o GNSS Location
  *
  */
+#include <signal.h>
 
 #include "common.h"
 #include "appInit.h"
@@ -33,9 +34,6 @@
 #include "signalQualityTask.h"
 #include "locationTask.h"
 #include "cellScanTask.h"
-
-#include <signal.h>
-#include "main.h"
 
 /* ----------------------------------------------------------------
  * DEFINES
