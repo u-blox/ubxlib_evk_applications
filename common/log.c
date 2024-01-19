@@ -216,75 +216,7 @@ void _writeLog(logLevels_t level, bool writeToFile, const char *log, ...)
     MUTEX_UNLOCK;
 }
 
-/// @brief Close the log file
-void closeLogFile(bool displayWarning)
-{
-    if (!logFileOpen)
-        return;
-
-    if (displayWarning)
-        printf("\nClosing log file... PLEASE WAIT!!!\n");
-    
-    MUTEX_LOCK
-
-        logFileOpen = false;
-
-        /* Currently we don't support writing to the log FILE */
-        // fs_close(&logFile);
-
-        if (pFlushTimerHandle != NULL)
-            uPortTimerStop(pFlushTimerHandle);
-    
-    MUTEX_UNLOCK
-    
-    if (displayWarning)
-        printf("Log file is now closed.\n");
-}
-
-void displayLogFile(void)
-{
-    char buffer[FILE_READ_BUFFER];
-    int count;
-
-    if (!logFileOpen) {
-        printf("Opening log file failed, cannot display log.");
-        return;
-    }
-
-    printf("\n********************************************************\n"
-               "*** LOG START ******************************************\n"
-               "********************************************************\n");
-
-    /* Currently we don't support writing to the log FILE
-    while((count = fs_read(&logFile, buffer, FILE_READ_BUFFER)) > 0)
-        printf("%.*s", count, buffer);
-    */
-
-    printf("\n********************************************************\n"
-               "*** LOG END ********************************************\n"
-               "********************************************************\n");
-}
-
-void deleteFile(const char *pFilename)
-{
-    /* Currently we don't support writing to the log FILE
-
-    const char *path = fsPath(pFilename);
-    if (fs_unlink(path) == 0)
-        printInfo("Deleted file: %s", pFilename);
-    else
-        printInfo("Failed to delete file: %s", pFilename);
-
-    */
-}
-
 void startLogging(const char *pFilename) {
     if (createLogFileMutex() < 0)
         return;
-
-    if (openLogFile(pFilename) == 0) {
-        // success!
-    } else {
-        printInfo("Only logging to terminal is enabled, not file logging.");
-    }
 }

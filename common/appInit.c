@@ -19,15 +19,6 @@
 #include "cellInit.h"
 #include "buttons.h"
 
-/* Currently we don't support writing to the log FILE */
-//#include "ext_fs.h"
-
-#include "../../ubxlib/port/platform/common/mutex_debug/u_mutex_debug.h"
-
-/* ----------------------------------------------------------------
- * TYPE DEFINITIONS
- * -------------------------------------------------------------- */
-
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
@@ -141,15 +132,6 @@ static int32_t initCellularDevice(void)
         printDebug("UBXLIB Logging is turned ON");
     #endif
 
-    // turn on the mutex debugging
-    #ifdef U_CFG_MUTEX_DEBUG
-        printf("***********************\n" \
-               "Mutex Debugging Enabled\n" \
-               "***********************\n");        
-        uMutexDebugInit();
-        uMutexDebugWatchdog(uMutexDebugPrint, NULL, U_MUTEX_DEBUG_WATCHDOG_TIMEOUT_SECONDS);
-    #endif
-
     writeInfo("Initiating the UBXLIB Device API...");
     errorCode = uDeviceInit();
     if (errorCode != 0) {
@@ -161,12 +143,21 @@ static int32_t initCellularDevice(void)
 
     printDebug("Cell Cfg - Module type: %d", deviceCfg.deviceCfg.cfgCell.moduleType);
     printDebug("Cell Cfg -   Transport: %d", deviceCfg.transportType);
+#ifdef BUILD_TARGET_RASPBERRY_PI
     printDebug("Cell Cfg -   UART name: %s", deviceCfg.transportCfg.cfgUart.pPrefix);
+#endif
+#ifdef BUILD_TARGET_WINDOWS
+    printDebug("Cell Cfg -   UART name: COM%d", deviceCfg.transportCfg.cfgUart.uart);
+#endif
 
     writeInfo("Opening/Turning on the cellular module...");
     errorCode = uDeviceOpen(&deviceCfg, &gCellDeviceHandle);
-    if (errorCode != 0) {
+    if (errorCode < 0) {
         writeFatal("* Failed to turn on the cellular module with uDeviceOpen(): %d", errorCode);
+#ifdef BUILD_TARGET_WINDOWS
+        if (errorCode == U_ERROR_COMMON_PLATFORM)
+            writeInfo("Is COM%d already being used?", deviceCfg.transportCfg.cfgUart.uart);
+#endif
         return errorCode;
     }
 
@@ -189,24 +180,7 @@ static void dwellAppLoop(void)
     } while((tick < previousDwellTimeMS) &&
             (previousDwellTimeMS == appDwellTimeMS) &&
             (!gExitApp));
-
-    printDebug("*** Application Tick ***\n");
 }
-
-#ifdef U_CFG_HEAP_MONITOR         // see prj.conf to enable
-static void checkHeapInfo(void)
-{
-    uPortLogOn();
-    printf("Checking for unfreed mallocs...\n");
-    int32_t mallocs = uPortHeapDump(NULL);
-    if (mallocs > 0) 
-        printf("WARNING: Still have mallocs left!...\n");
-    else
-        printf("Mallocs are all freed.\n");
-
-    uPortLogOff();
-}
-#endif
 
 int32_t closeCellularDevice(void)
 {
@@ -293,7 +267,9 @@ void pauseMainLoop(bool state)
 /// @param appFunc The function pointer of the app event code
 void runApplicationLoop(bool (*appFunc)(void))
 {
+    printDebug("Application Loop now starting");
     while(!gExitApp) {
+        printDebug("*** Application Tick ***\n");
         dwellAppLoop();
 
         if (gExitApp) return;
@@ -320,22 +296,16 @@ void finalize(applicationStates_t appState)
     waitForAllTasksToStop();
 
     // now stop the network registration task. Blue LED
-    stopAndWait(NETWORK_REG_TASK);
+    if (!stopAndWait(NETWORK_REG_TASK, 15))
+        printWarn("Did not stop the registration task properly");
 
     finalizeAllTasks();
-
-    closeLogFile(true);
 
     closeCellularDevice();
 
     deinitUbxlibDevices();
 
     closeConfig();
-
-
-    #ifdef U_CFG_HEAP_MONITOR // see prj.conf how to enable
-    checkHeapInfo();
-    #endif
 
     printf("\n\n\nApplication finished.\n");
 
@@ -358,15 +328,6 @@ bool startupFramework(void)
 {
     int32_t errorCode;
 
-    #ifdef U_CFG_MUTEX_DEBUG
-    errorCode = uMutexDebugInit();
-    if (errorCode < 0)
-    {
-        printf("Failed to init mutex debug: %d", errorCode);
-    }
-    uMutexDebugWatchdog(uMutexDebugPrint, NULL, U_MUTEX_DEBUG_WATCHDOG_TIMEOUT_SECONDS);
-    #endif
-
     errorCode = uPortInit();
     if (errorCode < 0) {
         printFatal("* uPortInit() Failed: %d - not running application!", errorCode);
@@ -375,15 +336,7 @@ bool startupFramework(void)
 
     setLogLevel(LOGGING_LEVEL);
     startLogging(LOG_FILENAME);
-
-    // check if ubxlib logging is enabled when the MUTEX or HEAP debug is enabled
-    #ifndef UBXLIB_LOGGING_ON
-        #ifdef U_CFG_MUTEX_DEBUG
-            printf("WARNING: MUTEX debugging is enabled, but UBXLIB logging is not enabled.\n" \
-                   "         Please enable UBXLIB_LOGGING_ON in config.h\n");
-        #endif
-    #endif
-
+    
     displayAppVersion();
 
     loadConfigFile(configFileName);
@@ -398,6 +351,8 @@ bool startupFramework(void)
     }
 
     // Initialise the task runners
+    printDebug("ubxlib Port and cellular device is ready.");
+    printDebug("Initialising the application Tasks");
     if (initTasks() != 0) {
         finalize(ERROR);
     }

@@ -66,12 +66,21 @@ static int32_t configureMNOProfile(void)
     }
 
     int32_t errorCode = uCellCfgGetMnoProfile(gCellDeviceHandle);
-    if (errorCode == cfgMNOProfile) return 0;
+    if (errorCode < 0) {
+        writeError("configureMNOProfile(): Failed to get MNO Profile: %d", errorCode);
+        return errorCode;
+    }
 
+    if (errorCode == cfgMNOProfile) {
+        writeDebug("MNO Profile already set to %d", cfgMNOProfile);
+        return 0;
+    }
+
+    writeDebug("Need to set MNO Profile from %d to %d", errorCode, cfgMNOProfile);
     errorCode = uCellCfgSetMnoProfile(gCellDeviceHandle, cfgMNOProfile);
     if(errorCode != 0)
     {
-        writeError("Failed to set MNO Profile %d", cfgMNOProfile);
+        writeError("configureMNOProfile(): Failed to set MNO Profile %d", cfgMNOProfile);
         return errorCode;
     }
 
@@ -88,11 +97,11 @@ static int32_t configureRAT(void)
 
     int32_t rat = uCellCfgGetRat(gCellDeviceHandle, 0);
     if (rat == cfgRAT) {
-        writeDebug("URAT already configured for %d", rat);
+        writeDebug("URAT already set to %d", rat);
         return 0;
     }
 
-    writeDebug("Module URAT will be changed from %d to %d", rat, cfgRAT);
+    writeDebug("Need to set URAT from %d to %d", rat, cfgRAT);
     int32_t errorCode = uCellCfgSetRat(gCellDeviceHandle, cfgRAT);
     if (errorCode != 0)
     {

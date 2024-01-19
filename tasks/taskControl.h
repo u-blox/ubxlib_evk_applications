@@ -174,12 +174,18 @@ int32_t initSingleTask(taskTypeId_t id);
 /// @brief Runs a appTask from it's start function in its taskConfig
 /// @param id The ID of the appTask to start
 /// @param waitForFunc A function which returns when the function should continue
-/// @return 0 if successful, or negative for failure.
+/// @return 0 if successful, or negative on failure.
 int32_t runTask(taskTypeId_t id, bool (*waitForFunc)(void));
 
 void dwellTask(taskConfig_t *taskConfig, bool (*exitFunc)(void));
 
-void stopAndWait(taskTypeId_t id);
+/// @brief Stops and then waits for the task to finish
+/// @param id       The ID of the appTask to stop
+/// @param timeout  The loop counter timeout
+/// @return         true if stopped, false for failure
+bool stopAndWait(taskTypeId_t id, int32_t timeout);
+
+/// @brief Wait for all the tasks to stop
 void waitForAllTasksToStop(void);
 
 /// @brief Finalize all the tasks, called at the end of the application 

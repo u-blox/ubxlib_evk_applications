@@ -522,8 +522,6 @@ static void subscribeToTopic(void *pParam)
 {
     topicCallback_t *topicCallback = (topicCallback_t *)pParam;
 
-    printDebug("Subscribing to topic '%s'...", topicCallback->topicName);
-
     // wait until the MQTT has been initialised...
     while(!TASK_INITIALISED && !gExitApp) {
         printDebug("Waiting for MQTT Task to be initialised...");
@@ -532,11 +530,15 @@ static void subscribeToTopic(void *pParam)
 
     // wait until the MQTT Task is up and running...
     while(!TASK_IS_RUNNING && !gExitApp) {
-        printDebug("Waiting for MQTT Task to start...");
-        uPortTaskBlock(500);
+        printDebug("Waiting to subscribe to %s...", topicCallback->topicName);
+        uPortTaskBlock(2000);
     }
 
+    if (gExitApp)
+        goto cleanUp;
+
     printDebug("Finished waiting for MQTT task to start...");
+    printDebug("Subscribing to topic '%s'...", topicCallback->topicName);
 
     // the MQTT task is running, but we might not be connected yet so this can fail
     // U_ERROR_COMMON_NOT_INITIALISED is the error if the MQTT client isn't connected yet.

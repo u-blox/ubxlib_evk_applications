@@ -27,7 +27,7 @@ APN NULL
 # * Please use the same RAT enum from the UBXLIB uCellNetRat_t list.
 # *  ----------------------------------------------------------------*/
 # 1=GSM+GPRS, 8=LTE (LARA-R6), 10=Cat-M1, 11=NB-IoT, 14=GSM+LTE (LENA-R8)
-URAT 8
+URAT 10
 
 #/* ----------------------------------------------------------------
 # * MNO PROFILE SELECTION

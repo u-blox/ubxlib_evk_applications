@@ -36,8 +36,6 @@
 
 #include <signal.h>
 
-//#include "u_mutex_debug.h"
-
 // Application name and version number is in the config.h file
 
 // Command line argument <ttyUART> which represents the TTY device for the cellular module
@@ -63,6 +61,7 @@ char configFileName[MAX_CONFIG_FILENAME+1];
 #define UNSUPPORTED_CELL_MODULE -3
 #define UNSUPPORTED_GNSS_MODULE -4
 #define CONFIG_FILENAME_TOO_BIG -5
+#define WRONG_UART_PORT_FOR_TARGET -6
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -143,34 +142,42 @@ int32_t parseCommandLine(int arge, char *argv[])
     }
 
 #ifdef BUILD_TARGET_RASPBERRY_PI
+    if (strncmp(argv[1], "/dev/", 5) != 0) {
+        return WRONG_UART_PORT_FOR_TARGET;
+    }
+
     /* TTY UART CONNECTION FOR THE CELLULAR MODULE */
     memset(ttyUART, 0, sizeof(ttyUART));
     strcpy(ttyUART, argv[1]);
 #endif
 #ifdef BUILD_TARGET_WINDOWS
+    if (strncmp(argv[1], "/dev/", 5) == 0) {
+        return WRONG_UART_PORT_FOR_TARGET;
+    }
+
     char *ptr;
     comPortNumber = strtol(argv[1], &ptr, 10);
 #endif
 
     /* CELLULAR MODULE */
     //TOLOWER(argv[2]);
-    if (strcmp(argv[2], "SARA-U201") == 0)
+    if (strncmp(argv[2], "SARA-U201", 9) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_U201;
-    else if (strcmp(argv[2], "SARA-R5") == 0)
+    else if (strncmp(argv[2], "SARA-R5", 7) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_R5;
-    else if (strcmp(argv[2], "SARA-R422") == 0)
+    else if (strncmp(argv[2], "SARA-R422", 9) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_R422;
-    else if (strcmp(argv[2], "SARA-R412m-03b") == 0)
+    else if (strncmp(argv[2], "SARA-R412M-03B", 14) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_R412M_03B;
-    else if (strcmp(argv[2], "SARA-R412m-02b") == 0)
+    else if (strncmp(argv[2], "SARA-R412M-02B", 14) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_R412M_02B;
-    else if (strcmp(argv[2], "SARA-R410m-03b") == 0)
+    else if (strncmp(argv[2], "SARA-R410M-03B", 14) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_R410M_03B;
-    else if (strcmp(argv[2], "SARA-R410m-02b") == 0)
+    else if (strncmp(argv[2], "SARA-R410M-02B", 14) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_SARA_R410M_02B;
-    else if (strcmp(argv[2], "LARA-R6") == 0)
+    else if (strncmp(argv[2], "LARA-R6", 7) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_LARA_R6;
-    else if (strcmp(argv[2], "LENA-R8") == 0)
+    else if (strncmp(argv[2], "LENA-R8", 7) == 0)
         cellModuleType = U_CELL_MODULE_TYPE_LENA_R8;
     else {
         printf("Unsupported Cellular module type: '%s'\n", argv[2]);
@@ -179,11 +186,11 @@ int32_t parseCommandLine(int arge, char *argv[])
 
     /* GNSS MODULE */
     //TOLOWER(argv[3]);
-    if (strcmp(argv[3], "M8") == 0)
+    if (strncmp(argv[3], "M8", 2) == 0)
         gnssModuleType = U_GNSS_MODULE_TYPE_M8;
-    else if (strcmp(argv[3], "M9") == 0)
+    else if (strncmp(argv[3], "M9", 2) == 0)
         gnssModuleType = U_GNSS_MODULE_TYPE_M9;
-    else if (strcmp(argv[3], "M10") == 0)
+    else if (strncmp(argv[3], "M10", 3) == 0)
         gnssModuleType = U_GNSS_MODULE_TYPE_M10;
     else {
         printf("Unsupported GNSS module type: '%s'\n", argv[3]);
@@ -224,17 +231,24 @@ void displayHelp(int32_t errCode)
         printf("\tM10\n\n");    
     } else if (errCode == TTY_UART_NAME_TOO_BIG) {
         printf("<ttyDevice> name is too long. Must be 20 characters or less.\n\n");
+    } else if (errCode == WRONG_UART_PORT_FOR_TARGET) {
+#ifdef BUILD_TARGET_RASPBERRY_PI
+        printf("Wrong UART port for Raspberry PI. Needs to be /dev/ttyXXXX format");
+#endif
+#ifdef BUILD_TARGET_WINDOWS
+        printf("Wrong UART port for Windows. Needs to be just the COM port number.");
+#endif
     } else {
         displayAppVersion();
 #ifdef BUILD_TARGET_RASPBERRY_PI
         printf("Use the command line arguments <ttyDevice> <CellModuleType> <GnssModuleType> [config]\n");
         printf("\n");
-        printf("   ./cellular_tracker /dev/ttyUSB0 SARA-R510 M8S\n");
+        printf("   ./cellular_tracker /dev/ttyUSB0 SARA-R510 M8\n");
 #endif
 #ifdef BUILD_TARGET_WINDOWS
-        printf("Use the command line arguments <Com port Number> <CellModuleType> <GnssModuleType> [config]\n");
+        printf("Use the command line arguments <COM Number> <CellModuleType> <GnssModuleType> [config]\n");
         printf("\n");
-        printf("   ./cellular_tracker 27 SARA-R510 M8S\n");
+        printf("   ./cellular_tracker 27 SARA-R510 M8\n");
 #endif
 
         printf("\nConfiguration file is optional at the end.\n\n");
@@ -256,24 +270,25 @@ int main(int arge, char *argv[])
     if (!startupFramework())
         return -1;
 
+    signal(SIGINT, intControlC);
+    printDebug("Control-C now hooked");
+
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs
-    if (runTask(NETWORK_REG_TASK, networkIsUp) != U_ERROR_COMMON_SUCCESS) goto FINALIZE;
+    printWarn("STARTING NETWORK REGISTRATION");
+    if (runTask(NETWORK_REG_TASK, networkIsUp) != U_ERROR_COMMON_SUCCESS)
+        finalize(ERROR);
 
     // The MQTT task connects and reconnects to the MQTT broker selected in the 
     // config.h file. This needs to run for MQTT messages to be published and
     // for remote control messages to be handled
-    if (runTask(MQTT_TASK, mqttConnectionIsUp) != U_ERROR_COMMON_SUCCESS) goto FINALIZE;
+    printWarn("STARTING MQTT SYSTEM");
+    if (runTask(MQTT_TASK, mqttConnectionIsUp) != U_ERROR_COMMON_SUCCESS)
+        finalize(ERROR);
 
     // Subscribe to the main AppControl topic for remote control the main application (this)
     subscribeToTopicAsync(APP_CONTROL_TOPIC, U_MQTT_QOS_AT_MOST_ONCE, callbacks, NUM_ELEMENTS(callbacks));
 
-    signal(SIGINT, intControlC);
-    printDebug("Control-C now hooked");
-
-    printDebug("Application Loop now starting");
-
-    // Start the application loop with our app function
     runApplicationLoop(appFunction);
 
 FINALIZE:

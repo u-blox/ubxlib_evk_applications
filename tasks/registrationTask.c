@@ -226,7 +226,7 @@ static void getNetworkOrNTPTime(void)
 static int32_t startNetworkRegistration(void)
 {
     if (gAppStatus == COPS_QUERY) {
-        printInfo("Not brining up the cellular network, running network query.");
+        printInfo("Not bringing up the cellular network, running network query.");
         return U_ERROR_COMMON_NOT_SUPPORTED;
     }
 

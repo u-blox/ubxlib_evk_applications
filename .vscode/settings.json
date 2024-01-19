@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "C:/Users/pwar/ubxlib_evk_applications/cellular_tracker"
+    "cmake.sourceDirectory": "C:/Users/pwar/ubxlib_evk_applications/cellular_tracker",
+    "files.associations": {
+        "common.h": "c"
+    }
 }

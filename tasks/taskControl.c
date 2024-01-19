@@ -87,7 +87,7 @@ static taskConfig_t *getTaskConfig(taskTypeId_t id)
 
 /// @brief Blocking function while waiting for the task to finish
 /// @param taskConfig The task Configuration to wait for
-static bool waitForTaskToStop(taskTypeId_t id)
+static bool waitForTaskToStop(taskTypeId_t id, int32_t timeout)
 {
     taskRunner_t *taskRunner = getTaskRunner(id);
     if (taskRunner == NULL) {
@@ -95,13 +95,15 @@ static bool waitForTaskToStop(taskTypeId_t id)
         return false;
     }
 
+    int32_t count = timeout;
     while(isMutexLocked(taskRunner->config.handles.mutexHandle)) {
-        writeInfo("Waiting for %s task to stop...", taskRunner->config.name);
+        writeInfo("Waiting for %s task to stop [%d]...", taskRunner->config.name, count);
         uPortTaskBlock(2000);
+        if (count-- == 0)
+            return false;
     }
 
     return true;
-
 }
 
 static bool stopTask(taskTypeId_t id)
@@ -179,10 +181,12 @@ void waitForAllTasksToStop()
     writeInfo("All tasks have now finished...");
 }
 
-void stopAndWait(taskTypeId_t id)
+bool stopAndWait(taskTypeId_t id, int32_t timeout)
 {
-    if (stopTask(id))
-        waitForTaskToStop(id);
+    if (!stopTask(id))
+        return false;
+
+    return waitForTaskToStop(id, timeout);
 }
 
 int32_t initSingleTask(taskTypeId_t id)
@@ -243,8 +247,9 @@ int32_t runTask(taskTypeId_t id, bool (*waitForFunc)(void))
     }
 
     if (waitForFunc != NULL)
+        printDebug("Waiting for task %s to complete its startup", runner->config.name);
         if (!waitFor(waitForFunc)) {
-            printError("Failed to waiting for task!");
+            printDebug("Exiting application, so not waiting for task %s anymore.", runner->config.name);
             return U_ERROR_COMMON_UNKNOWN;
         } 
 

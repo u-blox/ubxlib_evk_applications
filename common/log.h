@@ -77,15 +77,4 @@ void setLogLevel(logLevels_t level);
 /// @param ... The arguments to use in the log entry
 void _writeLog(logLevels_t level, bool writeToFile, const char *log, ...);
 
-/// @brief Display the entire log file to the terminal
-void displayLogFile(void);
-
-/// @brief Delete the specified file
-/// @param pFilename The file to delete
-void deleteFile(const char *pFilename);
-
-/// @brief Close the log file
-/// @param displayWarning Displays a warning message about waiting while closing the file
-void closeLogFile(bool displayWarning);
-
 #endif
