@@ -94,7 +94,7 @@ char pOperatorName[OPERATOR_NAME_SIZE] = "Unknown";
 int32_t operatorMcc = 0;
 int32_t operatorMnc = 0;
 
-typedef int32_t (*networkUpHandler_cb)(int32_t);
+typedef void (*networkUpHandler_cb)(int32_t);
 networkUpHandler_cb networkUpCallback = NULL;
 
 /* ----------------------------------------------------------------
