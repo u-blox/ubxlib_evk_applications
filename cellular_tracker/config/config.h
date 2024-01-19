@@ -32,7 +32,7 @@
 /* ----------------------------------------------------------------
  * Application Build Target - select what target system this is for
  * -------------------------------------------------------------- */
-//#define BUILD_TARGET_RASPBERRY_PI       // Raspberyy PI
+//#define BUILD_TARGET_RASPBERRY_PI       // Raspberry PI
 #define BUILD_TARGET_WINDOWS              // Windows
 
 /* ----------------------------------------------------------------

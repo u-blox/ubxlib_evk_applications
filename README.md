@@ -1,8 +1,19 @@
-# ubxlib cellular applications for Raspberry PI
+# ubxlib cellular EVK applications for Raspberry PI and Windows
 
-The purpose of this branch is to provide example applications which run on the Raspberry PI. The application was originally from the [ubxlib-cellular-tracker-xplr-iot](https://github.com/u-blox/ubxlib_cellular_applications_xplr_iot) repository, but this branch is for building and running on a Raspberry PI.
+The purpose of this branch is to provide example EVK applications which run on the Raspberry PI or Windows. The application was originally from the [ubxlib-cellular-tracker-xplr-iot](https://github.com/u-blox/ubxlib_cellular_applications_xplr_iot) repository, but this repository is dedicated for building on the raspberry PI or Windows.
 
-Because this branch is for the Raspberry PI you can use any combo Cellular+GNSS module that ubxlib supports. Currently this application does NOT support external GNSS devices.
+Because this project if for using the Cellular EVKs you can use any Combo Cellular+GNSS or even external GNSS module on the EVK that ubxlib supports.
+
+# Raspberry PI
+Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's config.h file.
+
+##setTTY2EVK.sh
+There is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.
+ttyEVK -> ttyUSB1 (2 UARTs - old rev EVB)
+ttyEVK -> ttyUSB2 (4 UARTs - new rev EVB)
+
+# Windows
+Please set the `BUILD_TARGET_WINDOWS` #define in the application's config.h file.
 
 # Applications
 
