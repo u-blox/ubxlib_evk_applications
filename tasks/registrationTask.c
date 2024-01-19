@@ -166,9 +166,10 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
     if (!gIsNetworkUp && isUp) {
         printWarn("Network is back up again");
         networkUpCounter++;
-        if(networkUpCallback != NULL)
+        if(networkUpCallback != NULL) {
             printDebug("Calling network back up callback...");
             networkUpCallback(networkUpCounter);
+        }
     }
 
     gIsNetworkUp = isUp;
@@ -261,6 +262,8 @@ static int32_t startNetworkRegistration(void)
     gIsNetworkUp = true;
     gAppStatus = REGISTERED;
     networkUpCounter=1;
+
+    networkUpCallback(networkUpCounter);
 
     getNetworkInfo();
     writeInfo("Connected to Cellular Network: %s (%03d%02d)", pOperatorName, operatorMcc, operatorMnc);
