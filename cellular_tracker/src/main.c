@@ -32,6 +32,7 @@
 
 #include "mqttTask.h"
 #include "signalQualityTask.h"
+#include "registrationTask.h"
 #include "locationTask.h"
 #include "cellScanTask.h"
 
