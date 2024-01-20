@@ -259,13 +259,16 @@ static int32_t startNetworkRegistration(void)
         return errorCode;
     }
 
-    gIsNetworkUp = true;
-    gAppStatus = REGISTERED;
-    networkUpCounter=1;
+    gIsNetworkUp = true;            // Yep, we've just connected.
+    gIsNetworkSignalValid = true;   // it must be valid as we've just connected!
+    gAppStatus = REGISTERED;        // set the status of the application
+    networkUpCounter=1;             // First time for everything
 
+    // Say the module is connected to the network as ubxlib won't do this 
+    // on the first connection :(
     networkUpCallback(networkUpCounter);
 
-    getNetworkInfo();
+    getNetworkInfo();               // This info will be sent next time the Signal Quality message is sent.
     writeInfo("Connected to Cellular Network: %s (%03d%02d)", pOperatorName, operatorMcc, operatorMnc);
     return 0;
 }
