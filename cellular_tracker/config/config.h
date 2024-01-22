@@ -53,11 +53,4 @@
  * -------------------------------------------------------------- */
 #define UBXLIB_LOGGING_ON
 
-/* ----------------------------------------------------------------
- * Enable the AT ECHO to be able to profile the AT Commands using 
- *                          just the Rx UART line.
- *                          Comment out if not required.
- * -------------------------------------------------------------- */
-//#define AT_ECHO_ENABLED              1
-
 #endif
