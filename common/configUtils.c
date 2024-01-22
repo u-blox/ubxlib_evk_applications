@@ -134,11 +134,16 @@ int32_t loadConfigFile(const char *filename)
     int32_t success;
     int32_t errorCode = U_ERROR_COMMON_SUCCESS;
 
+    if (filename == NULL) {
+        writeFatal("Invalid configuration file: NULL");
+        errorCode = U_ERROR_COMMON_NOT_INITIALISED;
+    }
+
     printInfo("Loading configuration: %s", filename);
 
     const char *path = fsPath(filename);
     if (!fsFileExists(path)) {
-        writeError("Configuration file not found on file system");
+        writeFatal("Configuration file not found: %s", filename);
         errorCode = U_ERROR_COMMON_NOT_FOUND;
         goto cleanUp;
     }

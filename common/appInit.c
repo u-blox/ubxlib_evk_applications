@@ -344,7 +344,9 @@ bool startupFramework(void)
     
     displayAppVersion();
 
-    loadConfigFile(configFileName);
+    if (loadConfigFile(configFileName) < 0)
+        return false;
+    
     printConfiguration();
 
     // initialise the cellular module

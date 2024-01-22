@@ -88,5 +88,8 @@ bool fsDelete(const char *filename)
 
 bool fsClose(FILE *fptr)
 {
+    if (fptr == 0)
+        return true;
+
     return fclose(fptr) == 0;
 }
