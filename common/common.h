@@ -127,6 +127,9 @@ extern bool gPauseMainLoop;
 // This flag represents the network's registration status
 extern bool gIsNetworkUp;
 
+// The number of times the network has come "up"
+extern int32_t networkUpCounter;
+
 // This flag represents the module can hear the network signaling (RSRP != 0)
 extern bool gIsNetworkSignalValid;
 

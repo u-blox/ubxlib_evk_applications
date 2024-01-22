@@ -174,9 +174,8 @@ void getCellularModuleInfo(void)
 }
 
 /// @brief Publishes the module information acquired by getCellularModuleInfo()
-/// @param networkBackUpCounter     counter for how many times the network has come back "up"
 /// over the main module's MQTT 'Information' topic
-int32_t publishCellularModuleInfo(int networkBackUpCounter)
+int32_t publishCellularModuleInfo()
 {
     char timestamp[TIMESTAMP_MAX_LENGTH_BYTES];
     getTimeStamp(timestamp);
@@ -200,11 +199,10 @@ int32_t publishCellularModuleInfo(int networkBackUpCounter)
             gModuleModel,
             gModuleVersion,
             gIMSI, gCCID,
-            networkBackUpCounter);
+            networkUpCounter);
 
     snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s", (const char *)gModuleSerial, "Information");
-    int32_t errorCode = publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);
     writeAlways(jsonBuffer);
 
-    return errorCode;
+    return publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);    
 }

@@ -69,7 +69,6 @@ int32_t gnssModuleType = -1;
 char configFileName[MAX_CONFIG_FILENAME+1];
 
 bool needToPublishModuleInfo = false;
-int32_t needToPublishNetworkUpCount = 0;
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -81,11 +80,10 @@ static callbackCommand_t callbacks[] = {
     {"SET_LOG_LEVEL", setAppLogLevel}
 };
 
-void checkReConnection(int32_t count)
+void publishModuleAppInfo(void)
 {
-    printDebug("Network is now back up [count: %d]", count);
-    needToPublishModuleInfo = publishCellularModuleInfo(count) != 0;
-    needToPublishNetworkUpCount = count;
+    // if the publish fails, then on the next app loop it will check again to publish
+    needToPublishModuleInfo = publishCellularModuleInfo() != 0;
 }
 
 /// @brief The application function(s) which are run every appDwellTime
@@ -94,8 +92,7 @@ bool appFunction(void)
 {
     queueMeasureNow(NULL);
     if (IS_NETWORK_AVAILABLE && needToPublishModuleInfo) {
-        printDebug("Need to re-publish the network is back up");
-        checkReConnection(needToPublishNetworkUpCount);
+        publishModuleAppInfo();
     }
 
     queueLocationNow(NULL);
@@ -276,7 +273,7 @@ int main(int arge, char *argv[])
     signal(SIGINT, intControlC);
     printDebug("Control-C now hooked");
 
-    registerNetworkUpCallback(checkReConnection);
+    registerNetworkUpCallback(publishModuleAppInfo);
 
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs

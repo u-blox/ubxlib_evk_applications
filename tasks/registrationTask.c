@@ -94,7 +94,8 @@ char pOperatorName[OPERATOR_NAME_SIZE] = "Unknown";
 int32_t operatorMcc = 0;
 int32_t operatorMnc = 0;
 
-typedef void (*networkUpHandler_cb)(int32_t);
+// our callback for the application to hanlde when
+// the network comes up. 
 networkUpHandler_cb networkUpCallback = NULL;
 
 /* ----------------------------------------------------------------
@@ -149,6 +150,9 @@ static int32_t getNetworkInfo(void)
         }
     }
 
+    if (errorCode == 0)
+        writeInfo("Connected to Cellular Network: %s (%03d%02d)", pOperatorName, operatorMcc, operatorMnc);
+
     return errorCode;
 }
 
@@ -168,7 +172,7 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
         networkUpCounter++;
         if(networkUpCallback != NULL) {
             printDebug("Calling network back up callback...");
-            networkUpCallback(networkUpCounter);
+            networkUpCallback();
         }
     }
 
@@ -262,14 +266,13 @@ static int32_t startNetworkRegistration(void)
     gIsNetworkUp = true;            // Yep, we've just connected.
     gIsNetworkSignalValid = true;   // it must be valid as we've just connected!
     gAppStatus = REGISTERED;        // set the status of the application
-    networkUpCounter=1;             // First time for everything
+    networkUpCounter=1;             // This is the first connection
 
-    // Say the module is connected to the network as ubxlib won't do this 
-    // on the first connection :(
-    networkUpCallback(networkUpCounter);
+    // Call the network up callback as the first connection 
+    // this callback won't happen.
+    networkUpCallback();
 
     getNetworkInfo();               // This info will be sent next time the Signal Quality message is sent.
-    writeInfo("Connected to Cellular Network: %s (%03d%02d)", pOperatorName, operatorMcc, operatorMnc);
     return 0;
 }
 
