@@ -39,7 +39,7 @@
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
-#define CONFIGURATION_FILENAME "config.txt"
+#define CONFIGURATION_FILENAME "app.conf"
 #define MAX_CONFIG_FILENAME 200
 #define MAX_TTY_UART_NAME 20
 
@@ -260,7 +260,6 @@ void displayHelp(int32_t errCode)
  * -------------------------------------------------------------- */
 int main(int arge, char *argv[])
 {
-
     int32_t errCode;    
     if ((errCode = parseCommandLine(arge, argv)) != 0) {
         displayHelp(errCode);

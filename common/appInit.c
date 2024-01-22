@@ -135,7 +135,7 @@ static int32_t initCellularDevice(void)
     writeInfo("Initiating the UBXLIB Device API...");
     errorCode = uDeviceInit();
     if (errorCode != 0) {
-        writeFatal("* uDeviceInit() Failed: %d", errorCode);
+        writeDebug("* uDeviceInit() Failed: %d", errorCode);
         return errorCode;
     }
 
@@ -188,6 +188,11 @@ int32_t closeCellularDevice(void)
     int32_t errorCode;
     
     bool powerOff = false;
+
+    if (gCellDeviceHandle == NULL) {
+        writeDebug("closeCellularDevice(): Cellular module handle is NULL");
+        return U_ERROR_COMMON_NOT_INITIALISED;
+    }
 
     errorCode = uDeviceClose(gCellDeviceHandle, powerOff);
     if (errorCode < 0) {
@@ -295,8 +300,8 @@ void finalize(applicationStates_t appState)
 
     waitForAllTasksToStop();
 
-    // now stop the network registration task. Blue LED
-    if (!stopAndWait(NETWORK_REG_TASK, 15))
+    // now stop the network registration task.
+    if (stopAndWait(NETWORK_REG_TASK, 15) < 0 && appState != ERROR)
         printWarn("Did not stop the registration task properly");
 
     finalizeAllTasks();
@@ -346,7 +351,7 @@ bool startupFramework(void)
     gAppStatus = INIT_DEVICE;
     errorCode = initCellularDevice();
     if (errorCode != 0) {
-        writeFatal("* Failed to initialise the cellular module - not running application!");
+        printInfo("Can't continue running the application.");
         finalize(ERROR);
     }
 

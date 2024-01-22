@@ -15,7 +15,11 @@ clone this repository on to the raspberry PI:
 You will need to install cmake, libssl-dev and libgpiod-dev  
 - sudo apt-get install cmake  
 - sudo apt-get install libssl-dev  
-- sudo apt-get install libsgpiod-dev  
+- sudo apt-get install libsgpiod-dev
+
+## Configuring the application
+Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
+MAKE Sure you use #define `BUILD_TARGET_RASPBERRY_PI` for setting the build target platform
 
 ## Compiling the application
 The build system uses cmake and make to configure and compile the application. `cmake` will use the environment variable to configure the build.
@@ -23,10 +27,6 @@ The build system uses cmake and make to configure and compile the application. `
 1. Change the directory to the [cellular_tracker](.) folder
 2. sudo cmake .
 3. sudo make
-
-## Configuring the application
-Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
-MAKE Sure you use #define `BUILD_TARGET_RASPBERRY_PI` for setting the build target platform
 
 # Windows
 ## Configuring the building environment
@@ -37,16 +37,16 @@ clone this repository on to your windows machine:
 
 You will need to install VisualStudio Code, Microsoft C++ compilers and CMake Tools extension.
 
+## Configuring the application
+Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
+MAKE Sure you use #define `BUILD_TARGET_WINDOWS` for setting the build target platform
+
 ## Compiling the application
 Right click on the [CMakeLists.txt](CMakeLists.txt) file and selected Build All.
 
 ## Debugging the application
 Use the [launch.json](../.vscode/launch.json) configurations to launch the application inside the VSCode debugger.  
 Set the "args" for the command line parameters.
-
-## Configuring the application
-Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
-MAKE Sure you use #define `BUILD_TARGET_WINDOWS` for setting the build target platform
 
 # Application remote commands
 The application can be remotely controlled through various topics which are subscribed to by the application tasks. 
