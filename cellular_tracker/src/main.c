@@ -69,6 +69,7 @@ int32_t gnssModuleType = -1;
 char configFileName[MAX_CONFIG_FILENAME+1];
 
 bool needToPublishModuleInfo = false;
+uPortMutexHandle_t appMutex;
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -77,17 +78,22 @@ bool needToPublishModuleInfo = false;
 #define APP_CONTROL_TOPIC "AppControl"
 static callbackCommand_t callbacks[] = {
     {"SET_DWELL_TIME", setAppDwellTime},
-    {"SET_LOG_LEVEL", setAppLogLevel}
+    {"SET_LOG_LEVEL", setAppLogLevel},
+    {"EXIT_APP", exitApplication}
 };
 
 void networkUpBackUpHandler(void)
 {
+    U_PORT_MUTEX_LOCK(appMutex);
+
     int32_t errorCode = publishCellularModuleInfo();
     // if the publish fails, then on the next app loop it will check again to publish
     needToPublishModuleInfo = errorCode != 0;
     if (needToPublishModuleInfo) {
         printWarn("Unable to publish module info at the moment: %d", errorCode);
     }
+
+    U_PORT_MUTEX_UNLOCK(appMutex);
 }
 
 /// @brief The application function(s) which are run every appDwellTime
@@ -277,6 +283,11 @@ int main(int arge, char *argv[])
     printDebug("Control-C now hooked");
 
     registerNetworkUpCallback(networkUpBackUpHandler);
+    if (uPortMutexCreate(&appMutex) != U_ERROR_COMMON_SUCCESS)
+    {
+        printFatal("Failed to create application mutex");
+        finalize(ERROR);
+    }
 
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs

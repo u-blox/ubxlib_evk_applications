@@ -20,13 +20,22 @@
 
 int32_t getSerialNumber(void);
 
+/* ----------------------------------------------------------------
+ * MQTT CONTROL FUNCTIONS FOR THE APPLICATION
+ * -------------------------------------------------------------- */
 int32_t setAppDwellTime(commandParamsList_t *params);
 int32_t setAppLogLevel(commandParamsList_t *params);
+int32_t exitApplication(commandParamsList_t *params);
 
-void setButtonTwoFunction(void (*func)(void));
+/* ----------------------------------------------------------------
+ * APPLICATION LOOP FUNCTIONS
+ * -------------------------------------------------------------- */
 void runApplicationLoop(bool (*appFunc)(void));
 void pauseMainLoop(bool state);
 
+/* ----------------------------------------------------------------
+ * PUBLIC FUNCTIONS
+ * -------------------------------------------------------------- */
 void displayAppVersion(void);
 bool startupFramework(void);
 void finalize(applicationStates_t appState);

@@ -17,7 +17,6 @@
 #include "common.h"
 #include "taskControl.h"
 #include "cellInit.h"
-#include "buttons.h"
 
 /* ----------------------------------------------------------------
  * DEFINES
@@ -52,6 +51,7 @@ static bool pauseMainLoopIndicator = false;
 
 static bool appFinalized = false;
 
+static int32_t exitCode = 0;
 
 /* ----------------------------------------------------------------
  * STATIC FUNCTIONS
@@ -182,7 +182,7 @@ static void dwellAppLoop(void)
             (!gExitApp));
 }
 
-int32_t closeCellularDevice(void)
+static int32_t closeCellularDevice(void)
 {
     writeInfo("Turning off Cellular Module...");
     int32_t errorCode;
@@ -203,7 +203,7 @@ int32_t closeCellularDevice(void)
     return U_ERROR_COMMON_SUCCESS;
 }
 
-int32_t deinitUbxlibDevices(void)
+static int32_t deinitUbxlibDevices(void)
 {
     int32_t errorCode;
     
@@ -253,6 +253,16 @@ int32_t setAppLogLevel(commandParamsList_t *params)
     }
 
     setLogLevel(logLevel);
+
+    return U_ERROR_COMMON_SUCCESS;
+}
+
+int32_t exitApplication(commandParamsList_t *params)
+{
+    exitCode = getParamValue(params, 1, -10, 10, 0);
+    printWarn("Application exiting with code: %d", exitCode);
+
+    gExitApp = true;
 
     return U_ERROR_COMMON_SUCCESS;
 }
@@ -314,10 +324,10 @@ void finalize(applicationStates_t appState)
 
     printf("\n\n\nApplication finished.\n");
 
-    if (appState == ERROR)
+    if (appState == ERROR && exitCode == 0)
         exit(-1);
     else
-        exit(0);
+        exit(exitCode);
 }
 
 void displayAppVersion(void)
