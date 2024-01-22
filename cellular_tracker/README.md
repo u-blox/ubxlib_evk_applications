@@ -83,6 +83,6 @@ Starts a cell scan process, just as if you had pressed Button #2
 ## Thingstream SIMS
 Thingstream SIMs can be used with two APNS; TSUDP or TSIOT.
 
-TSUDP is ONLY for MQTT-Anywhere service (using MQTT-SN), and does not allow any other internet traffic. This means when using TSUDP the NTP date/time request is not performed. This 'TSUDP' APN is listed as a 'restricted' APN in the [registrationTask.h](../tasks/registrationTask.h) file.
+TSUDP is ONLY for MQTT-Anywhere service (using MQTT-SN), and does not allow any other internet traffic. This means when using TSUDP the NTP date/time request is not performed. This 'TSUDP' APN is listed as a 'restricted' APN in the [registrationTask.c](../tasks/registrationTask.c) file.
 
 TSIOT can be used for normal internet services and as such should be used when using other MQTT brokers, or even other MQTT-SN gateways.
