@@ -7,6 +7,13 @@ As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or Si
 # Raspberry PI
 Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
+## Building
+Change to the application folder, [Cellular Tracker](cellular_tracker) for example, and type:  
+`sudo cmake .`  
+`sudo make`  
+
+See `ubxlib/port/platform/linux` for further information about building on Raspberry PI.
+
 ## setTTY2EVK.sh
 This is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.  
 ttyEVK -> ttyUSB0 (2 UARTs - old rev EVB)  
@@ -15,17 +22,14 @@ ttyEVK -> ttyUSB2 (4 UARTs - new rev EVB)
 Please run it with `sudo ./setTTY2EVK.sh` after you have connected the EVK to the Raspberry PI USB port.  
 Please note, this is not work if you have other ttyUSB devices connected! Only one EVK is supported.
 
-## Building
-Change to the application folder, [Cellular Tracker](cellular_tracker) for example, and type:  
-`sudo cmake .`  
-`sudo make`  
-
 # Windows
 Please set the `BUILD_TARGET_WINDOWS` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
 ## Building
-Use the VisualStudio Code IDE and install the Micorsoft C++ compilers/dev kit. Install the CMake Tools extension.
-Right click on the CMakeLists.txt file and select build.
+Use the VisualStudio Code IDE and install the Micorsoft C++ compilers/dev kit. Install the CMake Tools extension.  
+Right click on the CMakeLists.txt file and select build.  
+
+See `ubxlib/port/platform/windows/mcu/win32` for further information about building on Windows.
 
 # Applications
 
@@ -33,8 +37,6 @@ Right click on the CMakeLists.txt file and select build.
 
 * [Cellular Tracker](cellular_tracker).
   Publishes cellular signal strength parameters and location. Can be controlled to publish Cell Query results (+COPS=?)
-
-* [...]()
 
 # Application framework
 
