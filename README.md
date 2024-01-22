@@ -7,12 +7,13 @@ As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or ev
 # Raspberry PI
 Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
-##setTTY2EVK.sh
+## setTTY2EVK.sh
 This is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.  
 ttyEVK -> ttyUSB0 (2 UARTs - old rev EVB)  
 ttyEVK -> ttyUSB2 (4 UARTs - new rev EVB)  
   
-Please run it with `sudo ./setTTY2EVK.sh`
+Please run it with `sudo ./setTTY2EVK.sh` after you have connected the EVK to the Raspberry PI USB port.  
+Please note, this is not work if you have other ttyUSB devices connected! Only one EVK is supported.
 
 ## Building
 Change to the application folder, [Cellular Tracker](cellular_tracker) for example, and type:  
