@@ -26,7 +26,7 @@
  * TYPE DEFINITIONS
  * -------------------------------------------------------------- */
 /// @brief Network Comes Up callback handler
-typedef void (*networkUpHandler_cb)(int32_t);
+typedef void (*networkUpHandler_cb)(void);
 
 /* ----------------------------------------------------------------
  * COMMON TASK FUNCTIONS
