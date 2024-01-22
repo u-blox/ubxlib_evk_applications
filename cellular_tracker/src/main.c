@@ -42,6 +42,7 @@
 #define CONFIGURATION_FILENAME "app.conf"
 #define MAX_CONFIG_FILENAME 200
 #define MAX_TTY_UART_NAME 20
+#define MAX_APP_TOPIC_NAME 30
 
 #define NOT_ENOUGH_ARGUMENTS -1
 #define TTY_UART_NAME_TOO_BIG -2
@@ -70,6 +71,10 @@ char configFileName[MAX_CONFIG_FILENAME+1];
 
 bool needToPublishModuleInfo = false;
 uPortMutexHandle_t appMutex;
+
+// Configures what the first topic will be for MQTT messaging
+// <appTopicHeader>/<IMEI>/<AppTask>
+char appTopicHeader[MAX_APP_TOPIC_NAME];
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -217,6 +222,9 @@ int32_t parseCommandLine(int arge, char *argv[])
     } else {
         strcpy(configFileName, CONFIGURATION_FILENAME);
     }
+
+    memset(appTopicHeader, 0, sizeof(appTopicHeader));
+    strcpy(appTopicHeader, "PWAR-CELLTRACKER");
 
     return 0;
 }
