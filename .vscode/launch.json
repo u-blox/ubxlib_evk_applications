@@ -1,0 +1,16 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name":     "Cellular Tracker debug",
+            "type":     "cppvsdbg",
+            "request":  "launch",
+            "args":     ["14", "SARA-R422", "M10"],
+            "cwd":      "${workspaceFolder}/build/debug/",
+            "program":  "cellular_tracker.exe"
+        }
+    ]
+}
