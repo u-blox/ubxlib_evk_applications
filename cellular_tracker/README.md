@@ -3,37 +3,48 @@ The Cellular tracking application purpose is to periodically monitor the signal 
 
 All collected information is sent to the cloud via the embedded MQTT/MQTT-SN client to an MQTT Broker.
 
-Once turned ON, by default the application monitors the cellular signal quality. Once there is a GNSS fix, the location is also published to the cloud. If the START_CELL_SCAN message is received a base station scan is initialized.
+The application starts monitoring the cellular signal quality and once there is a GNSS fix, the location is also published to the cloud. If the START_CELL_SCAN message is received over the `NetworkScanControl` MQTT topic, a base station scan is initialized.
 
+# Raspberry PI
 ## Configuring the building environment
 The Raspberry PI is used to compile the application.
 
-clone this repository on to the raspberry PI:
-- git clone https://github.com/u-blox/ubxlib_cellular_applications_xplr_iot/tree/raspberryPi
+clone this repository on to the raspberry PI:  
+- git clone https://github.com/u-blox/ubxlib_evk_applications  
 
-<br>You will need to install cmake, libssl-dev and libgpiod-dev 
-- sudo apt-get install cmake
-- sudo apt-get install libssl-dev
-- sudo apt-get install libsgpiod-dev
-
-To configure what cellular module and what UART port the module is on, you must set the U_FLAGS environment variable.
-- export U_FLAGS='-DU_CFG_APP_CELL_UART=0 -DU_CFG_TEST_CELL_MODULE_TYPE=U_CELL_MODULE_TYPE_SARA_R422
+You will need to install cmake, libssl-dev and libgpiod-dev  
+- sudo apt-get install cmake  
+- sudo apt-get install libssl-dev  
+- sudo apt-get install libsgpiod-dev  
 
 ## Compiling the application
 The build system uses cmake and make to configure and compile the application. `cmake` will use the environment variable to configure the build.
 
-1. Change the directory to the `application\cellular_tracker` folder
-2. sudo -E cmake .
+1. Change the directory to the [cellular_tracker](cellular_tracker) folder
+2. sudo cmake .
 3. sudo make
 
 ## Configuring the application
-Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug
+Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
+MAKE Sure you use #define `BUILD_TARGET_RASPBERRY_PI` for setting the build target platform
 
-# LED indicators
-There are no LED indicators on the Raspberry PI for this project.
+# Windows
+## Configuring the building environment
+VisualStudio Code is used to compile the application.
+
+clone this repository on to your windows machine:  
+- git clone https://github.com/u-blox/ubxlib_evk_applications  
+
+You will need to install VisualStudio Code, Microsoft C++ compilers and CMake Tools extension.
+
+## Compiling the application
+Right click on the [CMakeLists.txt](CMakeLists.txt) file and selected Build All.
+
+## Configuring the application
+Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
+MAKE Sure you use #define `BUILD_TARGET_WINDOWS` for setting the build target platform
 
 # Application remote commands
-
 The application can be remotely controlled through various topics which are subscribed to by the application tasks. 
 
 A typical log output shows what the commands are for each task, and main application
