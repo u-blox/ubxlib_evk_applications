@@ -12,7 +12,7 @@ Change to the application folder, [Cellular Tracker](cellular_tracker) for examp
 `sudo cmake .`  
 `sudo make`  
 
-See ubxlib/port/platform/linux for further information about building on Raspberry PI.
+See `ubxlib/port/platform/linux` for further information about building on Raspberry PI.
 
 ## setTTY2EVK.sh
 This is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.  
@@ -29,7 +29,7 @@ Please set the `BUILD_TARGET_WINDOWS` #define in the application's [config.h](ce
 Use the VisualStudio Code IDE and install the Micorsoft C++ compilers/dev kit. Install the CMake Tools extension.  
 Right click on the CMakeLists.txt file and select build.  
 
-See ubxlib/port/platform/windows/mcu/win32 for further information about building on Windows.
+See `ubxlib/port/platform/windows/mcu/win32` for further information about building on Windows.
 
 # Applications
 
