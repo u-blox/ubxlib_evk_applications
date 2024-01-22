@@ -36,7 +36,7 @@
 #define STRCOPYTO(x, y)         (failed ? true : ((x = uStrDup(y))==NULL) ? true : false)
 #define MEMCOPYTO(x, y, len)    (failed ? true : ((x = uMemDup(y, len))==NULL) ? true : false)
 
-#define MAX_TOPIC_SIZE 100
+#define MAX_TOPIC_SIZE 256
 #define MAX_MESSAGE_SIZE (12 * 1024 + 1)    // set this to 12KB as this
                                             // is the same buffer size
                                             // in the modules plus 1
@@ -44,7 +44,7 @@
 
 #define MAX_TOPIC_CALLBACKS 50
 
-#define TEMP_TOPIC_NAME_SIZE 150
+#define TEMP_TOPIC_NAME_SIZE 256
 
 #define MQTT_TYPE_NAME (mqttSN ? "MQTT-SN Gateway" : "MQTT Broker")
 
@@ -80,13 +80,13 @@ static uSecurityTlsSettings_t tlsSettings = U_SECURITY_TLS_SETTINGS_DEFAULT;
 static uSecurityTlsCipherSuites_t cipherSuites;
 
 static int32_t messagesToRead = 0;
-static char topicString[MAX_TOPIC_SIZE];
+static char topicString[MAX_TOPIC_SIZE+1];
 static char *downlinkMessage;
 
 static int32_t topicCallbackCount = 0;
 static topicCallback_t *topicCallbackRegister[MAX_TOPIC_CALLBACKS];
 
-static char tempTopicName[TEMP_TOPIC_NAME_SIZE];
+static char tempTopicName[TEMP_TOPIC_NAME_SIZE+1];
 
 static bool mqttSN = false;
 static mqttSNTopicNameNode_t *mqttSNTopicNameList = NULL;
@@ -742,7 +742,7 @@ int32_t subscribeToTopicAsync(const char *taskTopicName, uMqttQos_t qos, callbac
         goto cleanUp;
     }
 
-    snprintf(tempTopicName, TEMP_TOPIC_NAME_SIZE, "%s/%s", gModuleSerial, taskTopicName);
+    snprintf(tempTopicName, TEMP_TOPIC_NAME_SIZE, "%s/%s/%s", gAppTopicHeader, gModuleSerial, taskTopicName);
     topicName = uStrDup(tempTopicName);
     if (topicName == NULL) {
         writeError("Failed to create task topic name - not enough memory");

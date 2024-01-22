@@ -74,7 +74,7 @@ uPortMutexHandle_t appMutex;
 
 // Configures what the first topic will be for MQTT messaging
 // <appTopicHeader>/<IMEI>/<AppTask>
-char appTopicHeader[MAX_APP_TOPIC_NAME];
+char gAppTopicHeader[MAX_APP_TOPIC_NAME+1];
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -223,8 +223,8 @@ int32_t parseCommandLine(int arge, char *argv[])
         strcpy(configFileName, CONFIGURATION_FILENAME);
     }
 
-    memset(appTopicHeader, 0, sizeof(appTopicHeader));
-    strcpy(appTopicHeader, "PWAR-CELLTRACKER");
+    memset(gAppTopicHeader, 0, sizeof(gAppTopicHeader));
+    strcpy(gAppTopicHeader, "PWAR-CELLTRACKER");
 
     return 0;
 }

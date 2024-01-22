@@ -114,7 +114,7 @@ typedef struct {
 
 // Configures what the first topic will be for MQTT messaging
 // <appTopicHeader>/<IMEI>/<AppTask>
-extern char appTopicHeader[];
+extern char gAppTopicHeader[];
 
 // serial number of the cellular module
 extern char gModuleSerial[];

@@ -44,7 +44,7 @@
 
 #define TASK_IS_RUNNING         isMutexLocked(TASK_MUTEX)
 
-#define CREATE_TOPIC_NAME       snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s/%s", (const char *)appTopicHeader, (const char *)gModuleSerial, TASK_NAME)
+#define CREATE_TOPIC_NAME       snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s/%s", gAppTopicHeader, gModuleSerial, TASK_NAME)
 
 #define EXIT_IF_CANT_RUN_TASK   if (taskConfig == NULL || !TASK_INITIALISED) {                          \
                                     writeWarn("%s task is not initialised yet, not starting.",          \

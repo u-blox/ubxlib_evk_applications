@@ -41,6 +41,7 @@ char gCCID[U_CELL_INFO_IMSI_SIZE+1];
 /* ----------------------------------------------------------------
  * STATIC VARIABLES
  * -------------------------------------------------------------- */
+// The topic name for CellInit messaing
 static char topicName[MAX_TOPIC_NAME_SIZE];
 
 /* ----------------------------------------------------------------
@@ -201,7 +202,7 @@ int32_t publishCellularModuleInfo()
             gIMSI, gCCID,
             networkUpCounter);
 
-    snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s", (const char *)gModuleSerial, "Information");
+    snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s/%s", gAppTopicHeader, gModuleSerial, "Information");
     writeAlways(jsonBuffer);
 
     return publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);    
