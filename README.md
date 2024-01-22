@@ -5,7 +5,7 @@ The purpose of this branch is to provide example EVK applications which run on t
 As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or even external GNSS module on the EVK that ubxlib supports.
 
 # Raspberry PI
-Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config.config.h) file.
+Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
 ##setTTY2EVK.sh
 This is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.  
