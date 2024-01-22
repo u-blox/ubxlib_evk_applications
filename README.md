@@ -1,25 +1,36 @@
 # ubxlib cellular EVK applications for Raspberry PI and Windows
 
-The purpose of this branch is to provide example EVK applications which run on the Raspberry PI or Windows. The application was originally from the [ubxlib-cellular-tracker-xplr-iot](https://github.com/u-blox/ubxlib_cellular_applications_xplr_iot) repository, but this repository is dedicated for building on the raspberry PI or Windows.
+The purpose of this branch is to provide example EVK applications which run on the Raspberry PI or Windows. The application was originally from the [ubxlib-cellular-tracker-xplr-iot](https://github.com/u-blox/ubxlib_cellular_applications_xplr_iot) repository, but this repository is dedicated for building on the XPLR-IoT-1 Development platform. This repository is dedicated for Windows and Raspberry PI platforms.
 
-Because this project if for using the Cellular EVKs you can use any Combo Cellular+GNSS or even external GNSS module on the EVK that ubxlib supports.
+As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or even external GNSS module on the EVK that ubxlib supports.
 
 # Raspberry PI
-Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's config.h file.
+Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config.config.h) file.
 
 ##setTTY2EVK.sh
-There is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.
-ttyEVK -> ttyUSB1 (2 UARTs - old rev EVB)
-ttyEVK -> ttyUSB2 (4 UARTs - new rev EVB)
+This is a bash script which will automatically create a symbol link to the correct ttyUSBx depending if there are two or four ttyUSBx found.  
+ttyEVK -> ttyUSB0 (2 UARTs - old rev EVB)  
+ttyEVK -> ttyUSB2 (4 UARTs - new rev EVB)  
+  
+Please run it with `sudo ./setTTY2EVK.sh`
+
+## Building
+Change to the application folder, [Cellular Tracker](cellular_tracker) for example, and type:  
+`sudo cmake .`  
+`sudo make`  
 
 # Windows
-Please set the `BUILD_TARGET_WINDOWS` #define in the application's config.h file.
+Please set the `BUILD_TARGET_WINDOWS` #define in the application's [config.h](cellular_tracker/config/config.h) file.
+
+## Building
+Use the VisualStudio Code IDE and install the Micorsoft C++ compilers/dev kit. Install the CMake Tools extension.
+Right click on the CMakeLists.txt file and select build.
 
 # Applications
 
 (Currently this repository has only one application).
 
-* [Cellular Tracker](applications/cellular_tracker).
+* [Cellular Tracker](cellular_tracker).
   Publishes cellular signal strength parameters and location. Can be controlled to publish Cell Query results (+COPS=?)
 
 * [...]()
@@ -30,14 +41,11 @@ The design of these applications is based around the same design.
 Each application has access to the following functions:
 
 ## Application tasks
-
 Each application is built from a number of `appTasks` which are either run in their own loop thread or their event executed separately.
-
 Each `appTask` is based on the same 'boiler plate' design. Each application task has a `taskMutex`, `taskEventQueue` and `taskHandler` which are provided by the UBXLIB API.
-
 The application `main()` function simply runs the `appTask's` loop or commands an `appTaks` to run individually at certain timing, or possibly other events. This makes up the application.
 
-See [here](applications/tasks) for further information of each `appTask` currently implemented.
+See [here](tasks) for further information of each `appTask` currently implemented.
 
 ## Application remote control
 
@@ -62,12 +70,12 @@ This data/information should normally be formatted as JSON.
 Unlike the original XPLR Cellular Tracker application, this raspberry PI version does not log to a log file. Please use standard linux piping and systemd to run the application and view the output.
 
 # Application main()
-This is the starting point of the application. It will initialize the UBXLIB system and the device.
+This is the starting point of the application. It will initialize the UBXLIB system and the device and run the application loop.
 
-If present on the file system the application will load the MQTT credentials. If the MQTT credentials are not stored on the file system, it can be specified using a `#define` in the `config.h` file.
+The Cellular settings, MQTT Profile and Security settings are set in the `config.txt` file. See here for an example: [config.txt](cellular_tracker/config.txt)
 
-After the main system is initialized it will initialize the application tasks. Here each task will create a Mutex and eventQueue. These can be used to know if the appTask is running something, and communicate a command to it.
+After the main system is configured it will `initialize` the application tasks. Here each task will create a Mutex and eventQueue. These can be used to know if the appTask is running something, and communicate a command to it.
 
-Once all the application tasks are initialized the Registration and MQTT application tasks will `start()`. Here they will run their task loop, looking after the registration and MQTT broker connection.
+Once all the application tasks are `initialized` the `Registration` and `MQTT` tasks will `start()`. Here they will run their task loop, looking after the registration and MQTT broker connection.
 
-The main application will terminate if the INTERRUPT signal is provided to the application (`ctrl-c`), closing the MQTT broker connection, deregistering from the network. 
+The main application will terminate if the INTERRUPT signal is provided to the application (`ctrl-c`), closing the MQTT broker connection and deregistering from the network. 
