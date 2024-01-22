@@ -82,8 +82,12 @@ static callbackCommand_t callbacks[] = {
 
 void publishModuleAppInfo(void)
 {
+    int32_t errorCode = publishCellularModuleInfo();
     // if the publish fails, then on the next app loop it will check again to publish
-    needToPublishModuleInfo = publishCellularModuleInfo() != 0;
+    needToPublishModuleInfo = errorCode != 0;
+    if (needToPublishModuleInfo) {
+        printWarn("Unable to publish module info at the moment: %d", errorCode);
+    }
 }
 
 /// @brief The application function(s) which are run every appDwellTime

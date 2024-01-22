@@ -126,9 +126,9 @@ static void handlePublishError(void)
     }
 }
 
-/// @brief Send an MQTT Message - remember to FREE the msg memory!!!!
+/// @brief Publishes an MQTT Message - remember to FREE the msg memory!!!!
 /// @param msg The message to send.
-static void mqttSendMessage(sendMQTTMsg_t msg)
+static void mqttPublishMessage(sendMQTTMsg_t msg)
 {
     if (!isNotExiting()) return;
 
@@ -150,7 +150,7 @@ static void mqttSendMessage(sendMQTTMsg_t msg)
 
         if (errorCode == 0) {
             lastMQTTError = 0;
-            writeDebug("Published MQTT message");
+            writeDebug("Published MQTT message #%d", msg.id);
         } else {
             int32_t errValue = uMqttClientGetLastErrorCode(pContext);
             if (errValue < 0)
@@ -163,7 +163,7 @@ static void mqttSendMessage(sendMQTTMsg_t msg)
         }
 
     } else {
-        writeWarn("Network or MQTT connection not available, not publishing message");
+        writeWarn("Network or MQTT connection not available, not publishing message #id", msg.id);
     }
 
     gAppStatus = mqttConnected ? MQTT_CONNECTED : MQTT_DISCONNECTED;
@@ -183,7 +183,7 @@ static void queueHandler(void *pParam, size_t paramLengthBytes)
 
     switch(qMsg->msgType) {
         case SEND_MQTT_MESSAGE:
-            mqttSendMessage(qMsg->msg.message);
+            mqttPublishMessage(qMsg->msg.message);
             break;
 
         default:
@@ -417,7 +417,7 @@ static void taskLoop(void *pParameters)
     {
         if (!uMqttClientIsConnected(pContext)) {
             gAppStatus = MQTT_DISCONNECTED;
-            if (gIsNetworkUp) {
+            if (IS_NETWORK_AVAILABLE) {
                 writeInfo("MQTT client disconnected, trying to connect...");
                 if (connectBroker() != U_ERROR_COMMON_SUCCESS) {
                     uPortTaskBlock(5000);
@@ -714,6 +714,12 @@ cleanUp:
     return errorCode;
 }
 
+static int32_t _getNextId(void)
+{
+    static messageCounter = 0;
+    return messageCounter++;
+}
+
 /* ----------------------------------------------------------------
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
@@ -826,6 +832,7 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
 
     qMsg.msg.message.QoS = QoS;
     qMsg.msg.message.retain = retain;
+    qMsg.msg.message.id = _getNextId();
 
     errorCode = uPortEventQueueSendIrq(TASK_QUEUE, &qMsg, sizeof(mqttMsg_t));
 
@@ -835,7 +842,7 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
     }
 
     if (errorCode != 0) {
-        writeInfo("Failed queueing MQTT message, errorCode: %d", errorCode);
+        writeInfo("Failed queueing MQTT message #%d, errorCode: %d", qMsg.msg.message.id, errorCode);
         goto cleanUp;
     }
 
