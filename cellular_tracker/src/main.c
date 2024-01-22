@@ -80,7 +80,7 @@ static callbackCommand_t callbacks[] = {
     {"SET_LOG_LEVEL", setAppLogLevel}
 };
 
-void publishModuleAppInfo(void)
+void networkUpBackUpHandler(void)
 {
     int32_t errorCode = publishCellularModuleInfo();
     // if the publish fails, then on the next app loop it will check again to publish
@@ -96,7 +96,7 @@ bool appFunction(void)
 {
     queueMeasureNow(NULL);
     if (IS_NETWORK_AVAILABLE && needToPublishModuleInfo) {
-        publishModuleAppInfo();
+        networkUpBackUpHandler();
     }
 
     queueLocationNow(NULL);
@@ -276,7 +276,7 @@ int main(int arge, char *argv[])
     signal(SIGINT, intControlC);
     printDebug("Control-C now hooked");
 
-    registerNetworkUpCallback(publishModuleAppInfo);
+    registerNetworkUpCallback(networkUpBackUpHandler);
 
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs
