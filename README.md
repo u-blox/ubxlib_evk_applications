@@ -2,7 +2,7 @@
 
 The purpose of this branch is to provide example EVK applications which run on the Raspberry PI or Windows. The application was originally from the [ubxlib-cellular-tracker-xplr-iot](https://github.com/u-blox/ubxlib_cellular_applications_xplr_iot) repository, but this repository is dedicated for building on the XPLR-IoT-1 Development platform. This repository is dedicated for Windows and Raspberry PI platforms.
 
-As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or even external GNSS module on the EVK that ubxlib supports.
+As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or Single Cellular + GNSS ADP boards (NEO-M8)
 
 # Raspberry PI
 Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
