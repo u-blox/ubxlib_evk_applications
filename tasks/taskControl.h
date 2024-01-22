@@ -44,7 +44,7 @@
 
 #define TASK_IS_RUNNING         isMutexLocked(TASK_MUTEX)
 
-#define CREATE_TOPIC_NAME       snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s", (const char *)gModuleSerial, TASK_NAME)
+#define CREATE_TOPIC_NAME       snprintf(topicName, MAX_TOPIC_NAME_SIZE, "%s/%s/%s", gAppTopicHeader, gModuleSerial, TASK_NAME)
 
 #define EXIT_IF_CANT_RUN_TASK   if (taskConfig == NULL || !TASK_INITIALISED) {                          \
                                     writeWarn("%s task is not initialised yet, not starting.",          \
@@ -64,16 +64,16 @@
 
 #define START_TASK              int32_t errorCode = startTask();                                        \
                                 if (errorCode == 0) {                                                   \
-                                    writeInfo("Started %s task loop", TASK_NAME);                        \
+                                    writeInfo("Started %s task loop", TASK_NAME);                       \
                                 }                                                                       \
                                 return errorCode;
 
-#define STOP_TASK               if (taskConfig == NULL) {                                               \
-                                    writeDebug("Stop %s task requested, but it is not initialised");    \
+#define STOP_TASK               if (taskConfig == NULL || !taskConfig->initialised) {                    \
+                                    writeDebug("Stop task requested, but it is not initialised");       \
                                     return U_ERROR_COMMON_NOT_INITIALISED;                              \
                                 }                                                                       \
                                 exitTask = true;                                                        \
-                                writeInfo("Stop %s task requested...", taskConfig->name);                \
+                                writeInfo("Stop %s task requested...", taskConfig->name);               \
                                 return U_ERROR_COMMON_SUCCESS;
 
 #define INIT_MUTEX              int32_t errorCode = uPortMutexCreate(&TASK_MUTEX);                      \
@@ -182,8 +182,8 @@ void dwellTask(taskConfig_t *taskConfig, bool (*exitFunc)(void));
 /// @brief Stops and then waits for the task to finish
 /// @param id       The ID of the appTask to stop
 /// @param timeout  The loop counter timeout
-/// @return         true if stopped, false for failure
-bool stopAndWait(taskTypeId_t id, int32_t timeout);
+/// @return         0 on success, negative on failure
+int32_t stopAndWait(taskTypeId_t id, int32_t timeout);
 
 /// @brief Wait for all the tasks to stop
 void waitForAllTasksToStop(void);

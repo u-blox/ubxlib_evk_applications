@@ -17,7 +17,6 @@
 #include "common.h"
 #include "taskControl.h"
 #include "cellInit.h"
-#include "buttons.h"
 
 /* ----------------------------------------------------------------
  * DEFINES
@@ -52,6 +51,7 @@ static bool pauseMainLoopIndicator = false;
 
 static bool appFinalized = false;
 
+static int32_t exitCode = 0;
 
 /* ----------------------------------------------------------------
  * STATIC FUNCTIONS
@@ -135,7 +135,7 @@ static int32_t initCellularDevice(void)
     writeInfo("Initiating the UBXLIB Device API...");
     errorCode = uDeviceInit();
     if (errorCode != 0) {
-        writeFatal("* uDeviceInit() Failed: %d", errorCode);
+        writeDebug("* uDeviceInit() Failed: %d", errorCode);
         return errorCode;
     }
 
@@ -182,12 +182,17 @@ static void dwellAppLoop(void)
             (!gExitApp));
 }
 
-int32_t closeCellularDevice(void)
+static int32_t closeCellularDevice(void)
 {
     writeInfo("Turning off Cellular Module...");
     int32_t errorCode;
     
     bool powerOff = false;
+
+    if (gCellDeviceHandle == NULL) {
+        writeDebug("closeCellularDevice(): Cellular module handle is NULL");
+        return U_ERROR_COMMON_NOT_INITIALISED;
+    }
 
     errorCode = uDeviceClose(gCellDeviceHandle, powerOff);
     if (errorCode < 0) {
@@ -198,7 +203,7 @@ int32_t closeCellularDevice(void)
     return U_ERROR_COMMON_SUCCESS;
 }
 
-int32_t deinitUbxlibDevices(void)
+static int32_t deinitUbxlibDevices(void)
 {
     int32_t errorCode;
     
@@ -252,6 +257,16 @@ int32_t setAppLogLevel(commandParamsList_t *params)
     return U_ERROR_COMMON_SUCCESS;
 }
 
+int32_t exitApplication(commandParamsList_t *params)
+{
+    exitCode = getParamValue(params, 1, -10, 10, 0);
+    printWarn("Application exiting with code: %d", exitCode);
+
+    gExitApp = true;
+
+    return U_ERROR_COMMON_SUCCESS;
+}
+
 /// @brief Method of pausing the running of the main loop. 
 ///        Useful for when there are other long running activities
 ///        which need to stop the main loop
@@ -295,8 +310,8 @@ void finalize(applicationStates_t appState)
 
     waitForAllTasksToStop();
 
-    // now stop the network registration task. Blue LED
-    if (!stopAndWait(NETWORK_REG_TASK, 15))
+    // now stop the network registration task.
+    if (stopAndWait(NETWORK_REG_TASK, 15) < 0 && appState != ERROR)
         printWarn("Did not stop the registration task properly");
 
     finalizeAllTasks();
@@ -309,10 +324,10 @@ void finalize(applicationStates_t appState)
 
     printf("\n\n\nApplication finished.\n");
 
-    if (appState == ERROR)
+    if (appState == ERROR && exitCode == 0)
         exit(-1);
     else
-        exit(0);
+        exit(exitCode);
 }
 
 void displayAppVersion(void)
@@ -339,14 +354,16 @@ bool startupFramework(void)
     
     displayAppVersion();
 
-    loadConfigFile(configFileName);
+    if (loadConfigFile(configFileName) < 0)
+        return false;
+    
     printConfiguration();
 
     // initialise the cellular module
     gAppStatus = INIT_DEVICE;
     errorCode = initCellularDevice();
     if (errorCode != 0) {
-        writeFatal("* Failed to initialise the cellular module - not running application!");
+        printInfo("Can't continue running the application.");
         finalize(ERROR);
     }
 

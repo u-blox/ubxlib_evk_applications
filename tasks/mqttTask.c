@@ -36,7 +36,7 @@
 #define STRCOPYTO(x, y)         (failed ? true : ((x = uStrDup(y))==NULL) ? true : false)
 #define MEMCOPYTO(x, y, len)    (failed ? true : ((x = uMemDup(y, len))==NULL) ? true : false)
 
-#define MAX_TOPIC_SIZE 100
+#define MAX_TOPIC_SIZE 256
 #define MAX_MESSAGE_SIZE (12 * 1024 + 1)    // set this to 12KB as this
                                             // is the same buffer size
                                             // in the modules plus 1
@@ -44,7 +44,7 @@
 
 #define MAX_TOPIC_CALLBACKS 50
 
-#define TEMP_TOPIC_NAME_SIZE 150
+#define TEMP_TOPIC_NAME_SIZE 256
 
 #define MQTT_TYPE_NAME (mqttSN ? "MQTT-SN Gateway" : "MQTT Broker")
 
@@ -80,13 +80,13 @@ static uSecurityTlsSettings_t tlsSettings = U_SECURITY_TLS_SETTINGS_DEFAULT;
 static uSecurityTlsCipherSuites_t cipherSuites;
 
 static int32_t messagesToRead = 0;
-static char topicString[MAX_TOPIC_SIZE];
+static char topicString[MAX_TOPIC_SIZE+1];
 static char *downlinkMessage;
 
 static int32_t topicCallbackCount = 0;
 static topicCallback_t *topicCallbackRegister[MAX_TOPIC_CALLBACKS];
 
-static char tempTopicName[TEMP_TOPIC_NAME_SIZE];
+static char tempTopicName[TEMP_TOPIC_NAME_SIZE+1];
 
 static bool mqttSN = false;
 static mqttSNTopicNameNode_t *mqttSNTopicNameList = NULL;
@@ -126,9 +126,9 @@ static void handlePublishError(void)
     }
 }
 
-/// @brief Send an MQTT Message - remember to FREE the msg memory!!!!
+/// @brief Publishes an MQTT Message - remember to FREE the msg memory!!!!
 /// @param msg The message to send.
-static void mqttSendMessage(sendMQTTMsg_t msg)
+static void mqttPublishMessage(sendMQTTMsg_t msg)
 {
     if (!isNotExiting()) return;
 
@@ -150,7 +150,7 @@ static void mqttSendMessage(sendMQTTMsg_t msg)
 
         if (errorCode == 0) {
             lastMQTTError = 0;
-            writeDebug("Published MQTT message");
+            writeDebug("Published MQTT message #%d", msg.id);
         } else {
             int32_t errValue = uMqttClientGetLastErrorCode(pContext);
             if (errValue < 0)
@@ -163,7 +163,7 @@ static void mqttSendMessage(sendMQTTMsg_t msg)
         }
 
     } else {
-        writeWarn("Network or MQTT connection not available, not publishing message");
+        writeWarn("Network or MQTT connection not available, not publishing message #id", msg.id);
     }
 
     gAppStatus = mqttConnected ? MQTT_CONNECTED : MQTT_DISCONNECTED;
@@ -183,7 +183,7 @@ static void queueHandler(void *pParam, size_t paramLengthBytes)
 
     switch(qMsg->msgType) {
         case SEND_MQTT_MESSAGE:
-            mqttSendMessage(qMsg->msg.message);
+            mqttPublishMessage(qMsg->msg.message);
             break;
 
         default:
@@ -417,7 +417,7 @@ static void taskLoop(void *pParameters)
     {
         if (!uMqttClientIsConnected(pContext)) {
             gAppStatus = MQTT_DISCONNECTED;
-            if (gIsNetworkUp) {
+            if (IS_NETWORK_AVAILABLE) {
                 writeInfo("MQTT client disconnected, trying to connect...");
                 if (connectBroker() != U_ERROR_COMMON_SUCCESS) {
                     uPortTaskBlock(5000);
@@ -714,6 +714,12 @@ cleanUp:
     return errorCode;
 }
 
+static int32_t _getNextId(void)
+{
+    static messageCounter = 0;
+    return messageCounter++;
+}
+
 /* ----------------------------------------------------------------
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
@@ -736,7 +742,7 @@ int32_t subscribeToTopicAsync(const char *taskTopicName, uMqttQos_t qos, callbac
         goto cleanUp;
     }
 
-    snprintf(tempTopicName, TEMP_TOPIC_NAME_SIZE, "%s/%s", gModuleSerial, taskTopicName);
+    snprintf(tempTopicName, TEMP_TOPIC_NAME_SIZE, "%s/%s/%s", gAppTopicHeader, gModuleSerial, taskTopicName);
     topicName = uStrDup(tempTopicName);
     if (topicName == NULL) {
         writeError("Failed to create task topic name - not enough memory");
@@ -826,6 +832,7 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
 
     qMsg.msg.message.QoS = QoS;
     qMsg.msg.message.retain = retain;
+    qMsg.msg.message.id = _getNextId();
 
     errorCode = uPortEventQueueSendIrq(TASK_QUEUE, &qMsg, sizeof(mqttMsg_t));
 
@@ -835,7 +842,7 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
     }
 
     if (errorCode != 0) {
-        writeInfo("Failed queueing MQTT message, errorCode: %d", errorCode);
+        writeInfo("Failed queueing MQTT message #%d, errorCode: %d", qMsg.msg.message.id, errorCode);
         goto cleanUp;
     }
 

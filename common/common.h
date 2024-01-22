@@ -44,7 +44,7 @@
 
 #define MAX_NUMBER_COMMAND_PARAMS   5
 
-#define MAX_TOPIC_NAME_SIZE         50
+#define MAX_TOPIC_NAME_SIZE         256
 
 #define QUEUE_STACK_SIZE(x)         MIN(U_PORT_EVENT_QUEUE_MIN_TASK_STACK_SIZE_BYTES, x)
 #define QUEUE_STACK_SIZE_DEFAULT    U_PORT_EVENT_QUEUE_MIN_TASK_STACK_SIZE_BYTES
@@ -112,8 +112,12 @@ typedef struct {
  * EXTERNAL VARIABLES used in the application tasks
  * -------------------------------------------------------------- */
 
+// Configures what the first topic will be for MQTT messaging
+// <appTopicHeader>/<IMEI>/<AppTask>
+extern char gAppTopicHeader[];
+
 // serial number of the cellular module
-extern char gModuleSerial[U_CELL_INFO_IMEI_SIZE+1];
+extern char gModuleSerial[];
 
 // This is the ubxlib deviceHandle for communicating with the cellular module
 extern uDeviceHandle_t gCellDeviceHandle;

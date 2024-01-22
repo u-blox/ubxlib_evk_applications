@@ -87,12 +87,12 @@ static taskConfig_t *getTaskConfig(taskTypeId_t id)
 
 /// @brief Blocking function while waiting for the task to finish
 /// @param taskConfig The task Configuration to wait for
-static bool waitForTaskToStop(taskTypeId_t id, int32_t timeout)
+static int32_t waitForTaskToStop(taskTypeId_t id, int32_t timeout)
 {
     taskRunner_t *taskRunner = getTaskRunner(id);
     if (taskRunner == NULL) {
         writeFatal("Failed to find task %d", id);
-        return false;
+        return U_ERROR_COMMON_NOT_FOUND;
     }
 
     int32_t count = timeout;
@@ -100,32 +100,32 @@ static bool waitForTaskToStop(taskTypeId_t id, int32_t timeout)
         writeInfo("Waiting for %s task to stop [%d]...", taskRunner->config.name, count);
         uPortTaskBlock(2000);
         if (count-- == 0)
-            return false;
+            return U_ERROR_COMMON_TIMEOUT;
     }
 
-    return true;
+    return U_ERROR_COMMON_SUCCESS;
 }
 
-static bool stopTask(taskTypeId_t id)
+static int32_t stopTask(taskTypeId_t id)
 {
     taskRunner_t *runner = getTaskRunner(id);
     if (runner == NULL) {
         writeFatal("Failed to find task %d", id);
-        return false;
+        return U_ERROR_COMMON_NOT_FOUND;
     }
 
     if (runner->stopFunc == NULL) {
         writeDebug("Task %s does not have a stop function", runner->config.name);
-        return true;
+        return U_ERROR_COMMON_SUCCESS;
     }
 
     int32_t errorCode = runner->stopFunc(NULL);
     if (errorCode != 0) {
-        writeFatal("Stopping task %s returned error: %d", runner->config.name, errorCode);
-        return false;
+        writeDebug("Stopping task %s returned error: %d", runner->config.name, errorCode);
+        return errorCode;
     }
 
-    return true;
+    return U_ERROR_COMMON_SUCCESS;
 }
 
 static int32_t finalizeTask(taskTypeId_t id)
@@ -181,10 +181,11 @@ void waitForAllTasksToStop()
     writeInfo("All tasks have now finished...");
 }
 
-bool stopAndWait(taskTypeId_t id, int32_t timeout)
+int32_t stopAndWait(taskTypeId_t id, int32_t timeout)
 {
-    if (!stopTask(id))
-        return false;
+    int32_t errorCode = stopTask(id);
+    if (errorCode < 0)
+        return errorCode;
 
     return waitForTaskToStop(id, timeout);
 }

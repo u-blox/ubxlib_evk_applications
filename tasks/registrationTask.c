@@ -166,20 +166,25 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
     if (pStatus->cell.domain != U_CELL_NET_REG_DOMAIN_PS)
         return;
 
+    bool prevNetworkUp = gIsNetworkUp;
+    gIsNetworkUp = isUp;
+
     // Handle the network going up 
-    if (!gIsNetworkUp && isUp) {
+    if (!prevNetworkUp && gIsNetworkUp) {
         printWarn("Network is back up again");
+        
+        // signal must be true because the network is back up
+        gIsNetworkSignalValid = true;
         networkUpCounter++;
+        
         if(networkUpCallback != NULL) {
             printDebug("Calling network back up callback...");
             networkUpCallback();
         }
     }
 
-    gIsNetworkUp = isUp;
-
     uCellNetStatus_t cellStatus = (uCellNetStatus_t) pStatus->cell.status;
-    if (isUp) {
+    if (gIsNetworkUp) {
         gAppStatus = REGISTERED;
         getNetworkInfo();
         writeInfo("Network is Registered: %s [Up count: %d]", 
@@ -263,16 +268,17 @@ static int32_t startNetworkRegistration(void)
         return errorCode;
     }
 
+    gAppStatus = REGISTERED;        // set the status of the application
     gIsNetworkUp = true;            // Yep, we've just connected.
     gIsNetworkSignalValid = true;   // it must be valid as we've just connected!
-    gAppStatus = REGISTERED;        // set the status of the application
     networkUpCounter=1;             // This is the first connection
 
-    // Call the network up callback as the first connection 
-    // this callback won't happen.
+    // Manually call the network up callback is it
+    // won't happen on the uNetworkInterfaceUp() call 
     networkUpCallback();
 
-    getNetworkInfo();               // This info will be sent next time the Signal Quality message is sent.
+    // This info will be sent next time the Signal Quality message is sent.
+    getNetworkInfo();
     return 0;
 }
 

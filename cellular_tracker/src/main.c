@@ -39,9 +39,10 @@
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
-#define CONFIGURATION_FILENAME "config.txt"
+#define CONFIGURATION_FILENAME "app.conf"
 #define MAX_CONFIG_FILENAME 200
 #define MAX_TTY_UART_NAME 20
+#define MAX_APP_TOPIC_NAME 30
 
 #define NOT_ENOUGH_ARGUMENTS -1
 #define TTY_UART_NAME_TOO_BIG -2
@@ -69,6 +70,11 @@ int32_t gnssModuleType = -1;
 char configFileName[MAX_CONFIG_FILENAME+1];
 
 bool needToPublishModuleInfo = false;
+uPortMutexHandle_t appMutex;
+
+// Configures what the first topic will be for MQTT messaging
+// <appTopicHeader>/<IMEI>/<AppTask>
+char gAppTopicHeader[MAX_APP_TOPIC_NAME+1];
 
 /* ----------------------------------------------------------------
  * Remote control callbacks for the main application
@@ -77,13 +83,22 @@ bool needToPublishModuleInfo = false;
 #define APP_CONTROL_TOPIC "AppControl"
 static callbackCommand_t callbacks[] = {
     {"SET_DWELL_TIME", setAppDwellTime},
-    {"SET_LOG_LEVEL", setAppLogLevel}
+    {"SET_LOG_LEVEL", setAppLogLevel},
+    {"EXIT_APP", exitApplication}
 };
 
-void publishModuleAppInfo(void)
+void networkUpBackUpHandler(void)
 {
+    U_PORT_MUTEX_LOCK(appMutex);
+
+    int32_t errorCode = publishCellularModuleInfo();
     // if the publish fails, then on the next app loop it will check again to publish
-    needToPublishModuleInfo = publishCellularModuleInfo() != 0;
+    needToPublishModuleInfo = errorCode != 0;
+    if (needToPublishModuleInfo) {
+        printWarn("Unable to publish module info at the moment: %d", errorCode);
+    }
+
+    U_PORT_MUTEX_UNLOCK(appMutex);
 }
 
 /// @brief The application function(s) which are run every appDwellTime
@@ -92,7 +107,7 @@ bool appFunction(void)
 {
     queueMeasureNow(NULL);
     if (IS_NETWORK_AVAILABLE && needToPublishModuleInfo) {
-        publishModuleAppInfo();
+        networkUpBackUpHandler();
     }
 
     queueLocationNow(NULL);
@@ -208,6 +223,9 @@ int32_t parseCommandLine(int arge, char *argv[])
         strcpy(configFileName, CONFIGURATION_FILENAME);
     }
 
+    memset(gAppTopicHeader, 0, sizeof(gAppTopicHeader));
+    strcpy(gAppTopicHeader, "PWAR-CELLTRACKER");
+
     return 0;
 }
 
@@ -260,7 +278,6 @@ void displayHelp(int32_t errCode)
  * -------------------------------------------------------------- */
 int main(int arge, char *argv[])
 {
-
     int32_t errCode;    
     if ((errCode = parseCommandLine(arge, argv)) != 0) {
         displayHelp(errCode);
@@ -273,7 +290,12 @@ int main(int arge, char *argv[])
     signal(SIGINT, intControlC);
     printDebug("Control-C now hooked");
 
-    registerNetworkUpCallback(publishModuleAppInfo);
+    registerNetworkUpCallback(networkUpBackUpHandler);
+    if (uPortMutexCreate(&appMutex) != U_ERROR_COMMON_SUCCESS)
+    {
+        printFatal("Failed to create application mutex");
+        finalize(ERROR);
+    }
 
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs
