@@ -40,6 +40,10 @@ You will need to install VisualStudio Code, Microsoft C++ compilers and CMake To
 ## Compiling the application
 Right click on the [CMakeLists.txt](CMakeLists.txt) file and selected Build All.
 
+## Debugging the application
+Use the [launch.json](../.vscode/launch.json) configurations to launch the application inside the VSCode debugger.  
+Set the "args" for the command line parameters.
+
 ## Configuring the application
 Using the [config.h](config/config.h) file in the [config](config/) folder you will find the basic application configuration settings, like the level of debug.  
 MAKE Sure you use #define `BUILD_TARGET_WINDOWS` for setting the build target platform
