@@ -27,7 +27,7 @@
  * Application Version number - this includes the common/tasks too
  * -------------------------------------------------------------- */
 #define APP_NAME    "Cellular Tracker"
-#define APP_VERSION "v1.1"
+#define APP_VERSION "v1.2"
 
 /* ----------------------------------------------------------------
  * Application Build Target - select what target system this is for
