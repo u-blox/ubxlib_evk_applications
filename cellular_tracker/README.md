@@ -20,7 +20,7 @@ You will need to install cmake, libssl-dev and libgpiod-dev
 ## Compiling the application
 The build system uses cmake and make to configure and compile the application. `cmake` will use the environment variable to configure the build.
 
-1. Change the directory to the [cellular_tracker](cellular_tracker) folder
+1. Change the directory to the [cellular_tracker](.) folder
 2. sudo cmake .
 3. sudo make
 
