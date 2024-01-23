@@ -158,7 +158,7 @@ int32_t parseCommandLine(int arge, char *argv[])
 
 #ifdef BUILD_TARGET_RASPBERRY_PI
     if (strncmp(argv[1], "/dev/", 5) != 0) {
-        return WRONG_UART_PORT_FOR_TARGET;
+        return ARGS_WRONG_UART_PORT_FOR_TARGET;
     }
 
     /* TTY UART CONNECTION FOR THE CELLULAR MODULE */
