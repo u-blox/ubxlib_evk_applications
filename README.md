@@ -5,6 +5,7 @@ The purpose of this resporitory is to provide example EVK applications which run
 As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or Single Cellular + GNSS ADP boards (NEO-M8)
 
 # Raspberry PI
+For an example for the cellular tracker application:  
 Set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
 ## Building
@@ -23,6 +24,7 @@ Run `sudo ./setTTY2EVK.sh` after you have connected the EVK to the Raspberry PI 
 Please note, this is not work if you have other ttyUSB devices connected! Only one EVK is supported.
 
 # Windows
+For an example for the cellular tracker application:  
 Set the `BUILD_TARGET_WINDOWS` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
 ## Building
