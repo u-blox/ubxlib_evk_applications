@@ -22,7 +22,6 @@
  * DEFINES
  * -------------------------------------------------------------- */
 #define STARTUP_DELAY 250       // 250 * 20ms => 5 seconds
-#define LOG_FILENAME "log.csv"
 
 // Dwell time of the main loop activity, pause period until the loop runs again
 #define APP_DWELL_TIME_MS_MINIMUM 5000
@@ -86,7 +85,7 @@ extern int32_t comPortNumber;
  * STATIC FUNCTIONS
  * -------------------------------------------------------------- */
 
-static void configCellModule(uDeviceCfg_t *pDeviceCfg)
+static void setCellularDeviceConfig(uDeviceCfg_t *pDeviceCfg)
 {
     pDeviceCfg->deviceType = U_DEVICE_TYPE_CELL;
     pDeviceCfg->transportType = U_DEVICE_TRANSPORT_TYPE_UART;
@@ -139,7 +138,7 @@ static int32_t initCellularDevice(void)
         return errorCode;
     }
 
-    configCellModule(&deviceCfg);
+    setCellularDeviceConfig(&deviceCfg);
 
     printDebug("Cell Cfg - Module type: %d", deviceCfg.deviceCfg.cfgCell.moduleType);
     printDebug("Cell Cfg -   Transport: %d", deviceCfg.transportType);
@@ -194,6 +193,7 @@ static int32_t closeCellularDevice(void)
         return U_ERROR_COMMON_NOT_INITIALISED;
     }
 
+    printf("uDeviceClose()\n");
     errorCode = uDeviceClose(gCellDeviceHandle, powerOff);
     if (errorCode < 0) {
         writeWarn("Failed to close the cellular module with uDeviceClose(): %d", errorCode);
@@ -207,12 +207,14 @@ static int32_t deinitUbxlibDevices(void)
 {
     int32_t errorCode;
     
+    printf("uDeviceDeinit()\n");
     errorCode = uDeviceDeinit();
     if (errorCode < 0) {
         writeWarn("Failed to de-initialize the device API with uDeviceDeinit(): %d", errorCode);
         return errorCode;
     }
 
+    printf("uPortDeinit()\n");
     uPortDeinit();
 
     return U_ERROR_COMMON_SUCCESS;
@@ -318,16 +320,18 @@ void finalize(applicationStates_t appState)
 
     closeCellularDevice();
 
-    deinitUbxlibDevices();
-
     closeConfig();
+
+    deinitUbxlibDevices();
 
     printf("\n\n\nApplication finished.\n");
 
     if (appState == ERROR && exitCode == 0)
         exit(-1);
-    else
+    else {
+        printf("Exit code: %d", exitCode);
         exit(exitCode);
+    }
 }
 
 void displayAppVersion(void)
@@ -350,13 +354,14 @@ bool startupFramework(void)
     }
 
     setLogLevel(LOGGING_LEVEL);
-    startLogging(LOG_FILENAME);
+    initializeLogging();
     
     displayAppVersion();
 
     if (loadConfigFile(configFileName) < 0)
         return false;
-    
+
+    parseConfiguration();
     printConfiguration();
 
     // initialise the cellular module

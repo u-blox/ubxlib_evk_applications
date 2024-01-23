@@ -216,7 +216,7 @@ void _writeLog(logLevels_t level, bool writeToFile, const char *log, ...)
     MUTEX_UNLOCK;
 }
 
-void startLogging(const char *pFilename) {
+void initializeLogging() {
     if (createLogFileMutex() < 0)
         return;
 }

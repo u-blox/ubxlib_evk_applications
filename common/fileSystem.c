@@ -52,7 +52,7 @@ bool fsFileSize(const char *filename, int32_t *size)
 */
 FILE *fsOpenWrite(const char *filename)
 {
-    return fopen(filename, "w");
+    return fopen(filename, "wb");
 }
 
 /**
@@ -62,7 +62,7 @@ FILE *fsOpenWrite(const char *filename)
 */
 FILE *fsOpenRead(const char *filename)
 {
-    return fopen(filename, "r");
+    return fopen(filename, "rb");
 }
 
 /**
@@ -78,7 +78,7 @@ size_t fsWrite(const char *data, size_t size, FILE *fptr)
 */
 size_t fsRead(char *data, size_t size, FILE *fptr)
 {
-    return fread(data, 1, size, fptr);
+    return fread(data, sizeof(char), size, fptr);
 }
 
 bool fsDelete(const char *filename)

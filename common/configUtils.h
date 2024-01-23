@@ -27,12 +27,19 @@
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
 
+/// @brief  Returns the number of configuration items loaded
+/// @return The number of configuration items loaded
+size_t getConfigItemCount(void);
+
 /// @brief Loads a configuration file ready for indexing
 /// @param filename The filename of the configuration file
 /// @return 0 on success, negative on failure
 int32_t loadConfigFile(const char *filename);
 
-/// @brief Prints the configuration list
+/// @brief Parses the loaded configuration text file
+void parseConfiguration(void);
+
+/// @brief Prints the configuration items
 void printConfiguration(void);
 
 /// @brief returns the specified configuration value

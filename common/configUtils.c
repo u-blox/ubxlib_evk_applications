@@ -34,7 +34,6 @@
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
-#define FILE_READ_BUFFER 50
 
 /* ----------------------------------------------------------------
  * TYPE DEFINITIONS
@@ -56,6 +55,13 @@ static char *configText = NULL;
 // This is a simple linked list which is used to navigate through the configText data.
 static appConfigList_t *configList = NULL;
 
+// Keep track of the number of configuration items we have in the linked list
+static size_t configItemCount = 0;
+
+/* ----------------------------------------------------------------
+ * PUBLIC VARIABLES
+ * -------------------------------------------------------------- */
+
 /* ----------------------------------------------------------------
  * STATIC PRIVATE FUNCTIONS
  * -------------------------------------------------------------- */
@@ -74,9 +80,23 @@ static appConfigList_t *createConfigKVP(char *key, char *value) {
     return newKVP;
 }
 
-static size_t parseConfiguration()
+static void freeConfigMemory(void)
 {
-    size_t count = 0;
+    printDebug("Freeing %d config items", configItemCount);
+    appConfigList_t *pCfg = configList;
+    for(appConfigList_t *kvp; pCfg != NULL;) {
+        kvp=pCfg->pNext;
+        printTrace("Freeing [0x%p]: %s\n", pCfg, pCfg->key);
+        uPortFree(pCfg);
+        pCfg = kvp;
+    }
+}
+
+/* ----------------------------------------------------------------
+ * PUBLIC FUNCTIONS
+ * -------------------------------------------------------------- */
+void parseConfiguration()
+{
     appConfigList_t *current, *newNode;
     appConfigList_t **head = &configList;
 
@@ -101,10 +121,11 @@ static size_t parseConfiguration()
             char *value = separator + 1;  // Skip ' '(space) and point to the value
 
             newNode = createConfigKVP(key, value);
+            // failure returns NULL, so exit
             if (newNode == NULL)
-                break;
+                goto cleanUp;
 
-            if(count == 0) {
+            if(configItemCount == 0) {
                 *head = newNode;
                 current = *head;
             } else {
@@ -112,21 +133,49 @@ static size_t parseConfiguration()
                 current = current->pNext;
             }
 
-            count++;
+            configItemCount++;
         }
 
         // Move to the next line
         line = strtok_r(NULL, "\n", &pSaveCfg);
     }
 
-    return count;
+cleanUp:
+    if (newNode == NULL) {
+        freeConfigMemory();
+        configItemCount = 0;
+    }
 }
 
-/* ----------------------------------------------------------------
- * PUBLIC FUNCTIONS
- * -------------------------------------------------------------- */
+size_t getConfigItemCount(void)
+{
+    return configItemCount;
+}
 
-/// @brief Loads a configuration file ready for indexing. Can load multiple config files
+/// @brief Sets the internal configuration 
+/// @param configurationText The configuration to copy
+void loadConfigText(const char *configurationText)
+{
+    int32_t errorCode = U_ERROR_COMMON_SUCCESS;
+    size_t size = strlen(configurationText);
+    configText = (char *)pUPortMalloc((size_t) size+1);
+    if (configText == NULL) {
+        writeError("Failed to allocate memory for configuration text, size: %d", size+1);
+        errorCode = U_ERROR_COMMON_NO_MEMORY;
+        goto cleanUp;
+    }
+
+    // copy the incoming configuration text and terminate it
+    memcpy(configText, configurationText, size);
+    configText[size] = '\0';
+
+cleanUp:
+    if (errorCode != 0) {
+        uPortFree(configText);
+    }
+}
+
+/// @brief Loads a configuration file ready for indexing
 /// @param filename The filename of the configuration file
 /// @return 0 on success, negative on failure
 int32_t loadConfigFile(const char *filename)
@@ -156,14 +205,20 @@ int32_t loadConfigFile(const char *filename)
         goto cleanUp;
     }
 
-    configText = (char *)pUPortMalloc((size_t) fileSize);
+    printDebug("Configuration file size: %d", fileSize);
+
+    // Add one more byte for the terminating '\0' as it's text
+    configText = (char *)pUPortMalloc((size_t) fileSize+1);
     if (configText == NULL) {
-        writeError("Failed to allocate memory for loading in configuration file, size: %d", fileSize);
+        writeError("Failed to allocate memory for loading in configuration file, size: %d", fileSize+1);
         errorCode = U_ERROR_COMMON_NO_MEMORY;
         goto cleanUp;
     }
 
-    fsInit(&configFile);
+    // clear memory as this is text
+    memset(configText, 0, fileSize+1);
+
+    fsInit(configFile);
     configFile = fsOpenRead(path);
     if (configFile == NULL) {
         writeError("Failed to open configuration file: %d", success);
@@ -171,13 +226,15 @@ int32_t loadConfigFile(const char *filename)
         goto cleanUp;
     }
 
-    size_t count;
-    char *buffer = configText;
-    while((count = fsRead(buffer, FILE_READ_BUFFER, configFile)) > 0) {
-        buffer = buffer + count;
-    }
+    // load the file entire file
+    size_t count = fsRead(configText, fileSize, configFile);
 
-    parseConfiguration();
+    // check the file reading was fully succesful
+    if (count != fileSize) {
+        writeError("Didn't read all %d bytes from %s file, only read %d", fileSize, filename, count);
+        errorCode = U_ERROR_COMMON_DEVICE_ERROR;
+        goto cleanUp;
+    }
 
 cleanUp:
     if (errorCode != 0) {
@@ -256,12 +313,6 @@ bool setBoolParamFromConfig(const char *key, const char *compare, bool *param)
 /// @brief frees memory from the configuration malloced array
 void closeConfig(void)
 {
-    appConfigList_t *pCfg = configList;
-    for(appConfigList_t *kvp = configList; kvp != NULL && pCfg != NULL;) {
-        kvp=pCfg->pNext;
-        uPortFree(pCfg);
-        pCfg = kvp;
-    }
-
+    freeConfigMemory();
     uPortFree(configText);
 }

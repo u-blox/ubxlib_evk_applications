@@ -273,12 +273,25 @@ void displayHelp(int32_t errCode)
     }
 }
 
+bool hookNetworkUpCallback()
+{
+    if (uPortMutexCreate(&appMutex) != U_ERROR_COMMON_SUCCESS)
+    {
+        printFatal("Failed to create application mutex");
+        return false;
+    }
+
+    registerNetworkUpCallback(networkUpBackUpHandler);
+
+    return true;
+}
+
 /* ----------------------------------------------------------------
  * Main starting point of the application.
  * -------------------------------------------------------------- */
 int main(int arge, char *argv[])
 {
-    int32_t errCode;    
+    int32_t errCode;
     if ((errCode = parseCommandLine(arge, argv)) != 0) {
         displayHelp(errCode);
         return -1;
@@ -290,12 +303,8 @@ int main(int arge, char *argv[])
     signal(SIGINT, intControlC);
     printDebug("Control-C now hooked");
 
-    registerNetworkUpCallback(networkUpBackUpHandler);
-    if (uPortMutexCreate(&appMutex) != U_ERROR_COMMON_SUCCESS)
-    {
-        printFatal("Failed to create application mutex");
+    if (!hookNetworkUpCallback())
         finalize(ERROR);
-    }
 
     // The Network registration task is used to connect to the cellular network
     // This will monitor the +CxREG URCs
