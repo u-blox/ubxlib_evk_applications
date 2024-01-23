@@ -127,8 +127,8 @@ static void doCellScan(void *pParams)
                     rat,
                     mccMnc);
 
-        publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, false);
         writeAlways(jsonBuffer);
+        publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, false);
     }
 
     if (!gExitApp) {

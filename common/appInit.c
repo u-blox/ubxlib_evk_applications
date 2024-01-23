@@ -18,16 +18,31 @@
 #include "taskControl.h"
 #include "cellInit.h"
 
+#ifdef BUILD_TARGET_WINDOWS
+#include <WinSock2.h>
+#endif
+#ifdef BUILD_TARGET_RASPBERRY_PI
+#include <unistd.h>
+#endif
+
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
 #define STARTUP_DELAY 250       // 250 * 20ms => 5 seconds
-#define LOG_FILENAME "log.csv"
 
 // Dwell time of the main loop activity, pause period until the loop runs again
 #define APP_DWELL_TIME_MS_MINIMUM 5000
 #define APP_DWELL_TIME_MS_DEFAULT APP_DWELL_TIME_MS_MINIMUM;
 #define APP_DWELL_TICK_MS 50
+
+// MQTT Topic will be of this format: <APP_TOPIC_NAME>/<IMEI>/<APP_TASK>
+#define MAX_APP_TOPIC_NAME 30
+
+// APP TOPIC NAME HEADER
+#define APP_TOPIC_NAME_DEFAULT "U-BLOX"
+
+// Default App dwell time in milliseconds
+#define APP_DWELL_TIME_DEFAULT 5000
 
 /* ----------------------------------------------------------------
  * STATIC VARIABLES
@@ -40,17 +55,18 @@ extern int32_t cellModuleType;
 // Command line argument <gnssModuleType> which represents the u_cell_module_type.h value
 extern char ttyUART[];
 
-// Command line argument [config] which represents the configuration file to load.
-// If not specified then the configuration file will be CONFIGURATION_FILENAME default.
+// Command line argument [config] which represents the configuration
+// file to load. If not specified then the configuration file will be
+// set to DEFAULT_CONFIG_FILENAME
 extern char configFileName[];
 
-static int32_t appDwellTimeMS = 5000;
+// How long the application waits before running the app function again
+static int32_t appDwellTimeMS = APP_DWELL_TIME_DEFAULT;
 
 // This flag will pause the main application loop
 static bool pauseMainLoopIndicator = false;
 
-static bool appFinalized = false;
-
+// The code value to use when exiting the application with exit(exitcode);
 static int32_t exitCode = 0;
 
 /* ----------------------------------------------------------------
@@ -65,11 +81,17 @@ applicationStates_t gAppStatus = MANUAL;
 // deviceHandle is not static as this is shared between other modules.
 uDeviceHandle_t gCellDeviceHandle;
 
-// This flag is set to true when the application should close tasks and log files.
-// This flag is set to true when Button #1 is pressed.
+// This flag indicates whether the application should start to shutdown
 bool gExitApp = false;
 
-void (*buttonTwoFunc)(void) = NULL;
+// This flag indicates whether the ubxlib logging output is enabled
+// ubxlib logging is only enabled when the gLogLevel is also at 
+// eDEBUG or higher log level.
+bool gUBXLIBLogging = UBXLIB_LOGGING_ON;
+
+// Configures what the first topic will be for MQTT messaging
+// MQTT Topic will be of this format: <APP_TOPIC_NAME>/<IMEI>/<APP_TASK>
+char gAppTopicHeader[MAX_APP_TOPIC_NAME+1];
 
 /* ----------------------------------------------------------------
  * EXTERNAL GLOBAL VARIABLES
@@ -86,7 +108,7 @@ extern int32_t comPortNumber;
  * STATIC FUNCTIONS
  * -------------------------------------------------------------- */
 
-static void configCellModule(uDeviceCfg_t *pDeviceCfg)
+static void setCellularDeviceConfig(uDeviceCfg_t *pDeviceCfg)
 {
     pDeviceCfg->deviceType = U_DEVICE_TYPE_CELL;
     pDeviceCfg->transportType = U_DEVICE_TRANSPORT_TYPE_UART;
@@ -125,12 +147,12 @@ static int32_t initCellularDevice(void)
     int32_t errorCode;
 
     // turn off the UBXLIB printInfo() logging as it is enabled by default (?!)
-    #ifndef UBXLIB_LOGGING_ON
+    if (!gUBXLIBLogging) {
         printDebug("UBXLIB Logging is turned off.");
         uPortLogOff();
-    #else
+    } else {
         printDebug("UBXLIB Logging is turned ON");
-    #endif
+    }
 
     writeInfo("Initiating the UBXLIB Device API...");
     errorCode = uDeviceInit();
@@ -139,7 +161,7 @@ static int32_t initCellularDevice(void)
         return errorCode;
     }
 
-    configCellModule(&deviceCfg);
+    setCellularDeviceConfig(&deviceCfg);
 
     printDebug("Cell Cfg - Module type: %d", deviceCfg.deviceCfg.cfgCell.moduleType);
     printDebug("Cell Cfg -   Transport: %d", deviceCfg.transportType);
@@ -205,9 +227,7 @@ static int32_t closeCellularDevice(void)
 
 static int32_t deinitUbxlibDevices(void)
 {
-    int32_t errorCode;
-    
-    errorCode = uDeviceDeinit();
+    int32_t errorCode = uDeviceDeinit();
     if (errorCode < 0) {
         writeWarn("Failed to de-initialize the device API with uDeviceDeinit(): %d", errorCode);
         return errorCode;
@@ -216,6 +236,143 @@ static int32_t deinitUbxlibDevices(void)
     uPortDeinit();
 
     return U_ERROR_COMMON_SUCCESS;
+}
+
+#ifdef BUILD_TARGET_WINDOWS
+static int32_t startUpWinSock(void)
+{
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    int err;
+
+    /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+    wVersionRequested = MAKEWORD(2, 2);
+
+    err = WSAStartup(wVersionRequested, &wsaData);
+    if (err != 0) {
+        /* Tell the user that we could not find a usable */
+        /* Winsock DLL.                                  */
+        printError("WSAStartup failed with error: %d\n", err);
+        return U_ERROR_COMMON_DEVICE_ERROR;
+    }
+
+    return U_ERROR_COMMON_SUCCESS;
+}
+
+static int32_t getWindowsHostName(void)
+{
+    int32_t error = startUpWinSock();
+    if (error != 0) {
+        printError("Failed to start WinSock: %d", error);
+        error = U_ERROR_COMMON_DEVICE_ERROR;
+    } else {
+        error = gethostname(gAppTopicHeader, sizeof(gAppTopicHeader));
+        if (error != 0) {
+            printError("Failed to get hostname: %d", error);
+            error = U_ERROR_COMMON_DEVICE_ERROR;
+        }
+    }
+
+    // set the default App Topic Name on error
+    if (error != 0)
+        strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT); 
+
+    return error;
+}
+#endif
+
+#ifdef BUILD_TARGET_RASPBERRY_PI
+static int32_t getLinuxHostName(void)
+{
+    int32_t error = gethostname(gAppTopicHeader, sizeof(gAppTopicHeader));
+    if (error != 0) {
+        printError("Failed to get hostname: %d", error);
+        error = U_ERROR_COMMON_DEVICE_ERROR;
+    }
+
+    // set the default App Topic Name on error
+    if (error != 0)
+        strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT); 
+
+    return error;
+}
+#endif
+
+/// @brief Sets the Application's topic name from either
+///        the app.conf setting, or if NULL, the hostname
+static void setAppTopicName(void)
+{
+    memset(gAppTopicHeader, 0, sizeof(gAppTopicHeader));
+    const char *appTopicHeader = getConfig("APP_TOPIC_HEADER");
+    if (appTopicHeader != NULL) {
+        strcpy(gAppTopicHeader, appTopicHeader);
+    } else {
+#ifdef BUILD_TARGET_WINDOWS
+        getWindowsHostName();
+#endif
+#ifdef BUILD_TARGET_RASPBERRY_PI
+        getLinuxHostName();
+#endif
+    }
+
+    printDebug("APP Topic Name: %s", gAppTopicHeader);
+}
+
+static void setAppLogLevelFromConfig(void)
+{
+    int32_t logLevel;
+    if (setIntParamFromConfig("LOG_LEVEL", &logLevel)) {
+        setLogLevel((logLevels_t) logLevel);
+    }
+}
+
+static void setUBXLIBLogging(void)
+{
+    int32_t ubxlib;
+    if (setIntParamFromConfig("UBXLIB_LOGGING", &ubxlib)) {
+        if (getLogLevel() < eINFO) {
+            gUBXLIBLogging = ubxlib == 1;
+        } else {
+            printInfo("Requested UBXLIB logging, but app log level is set to eINFO or higher");
+            printInfo("UBXLIB logging will not be enabled.");
+            gUBXLIBLogging = false;
+        }
+    }
+}
+
+static void setAppDwellTimeFromConfig(void)
+{
+    int32_t dwellTime;
+    if (setIntParamFromConfig("APP_DWELL_TIME", &dwellTime)) {
+        appDwellTimeMS = dwellTime;
+    }
+}
+
+/// @brief This configures some of the internal global variables
+///        from the app.conf file if they are present.
+///        NULL or missing items will be ignored and the default
+///        setting will be used instead.
+static void setApplicationSettingsFromConfig(void)
+{
+    printDebug("Setting internal application settings...");
+    setAppLogLevelFromConfig();
+    setUBXLIBLogging();
+    setAppTopicName();
+    setAppDwellTimeFromConfig();
+}
+
+static bool loadAndConfigureApp(void)
+{
+    if (loadConfigFile(configFileName) < 0)
+        return false;
+
+    if (parseConfiguration() < 0)
+        return false;
+
+    printConfiguration();
+    setApplicationSettingsFromConfig();
+
+    return true;
 }
 
 /* ----------------------------------------------------------------
@@ -318,16 +475,17 @@ void finalize(applicationStates_t appState)
 
     closeCellularDevice();
 
-    deinitUbxlibDevices();
-
     closeConfig();
 
-    printf("\n\n\nApplication finished.\n");
+    deinitUbxlibDevices();
+
+    printf("\nApplication finished.\n");
 
     if (appState == ERROR && exitCode == 0)
         exit(-1);
-    else
+    else {
         exit(exitCode);
+    }
 }
 
 void displayAppVersion(void)
@@ -350,14 +508,12 @@ bool startupFramework(void)
     }
 
     setLogLevel(LOGGING_LEVEL);
-    startLogging(LOG_FILENAME);
+    initializeLogging();
     
     displayAppVersion();
 
-    if (loadConfigFile(configFileName) < 0)
+    if (!loadAndConfigureApp())
         return false;
-    
-    printConfiguration();
 
     // initialise the cellular module
     gAppStatus = INIT_DEVICE;

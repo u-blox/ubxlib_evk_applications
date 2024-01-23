@@ -51,6 +51,6 @@
  *                          out the ubxlib logging to the terminal
  *                          but NOT to the log file.
  * -------------------------------------------------------------- */
-#define UBXLIB_LOGGING_ON
+#define UBXLIB_LOGGING_ON 1
 
 #endif

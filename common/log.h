@@ -64,11 +64,15 @@ typedef enum {
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
 /// @brief Start logging to the specified file
-/// @param pFilename The filename to log to
-void startLogging(const char *pFilename);
+void initializeLogging();
 
-/// @brief set the logging level of printInfo and writeLog
-void setLogLevel(logLevels_t level);
+/// @brief          Sets the logging level of the application
+/// @param logLevel The log level to set, based on the logLevels_t enum
+void setLogLevel(logLevels_t logLevel);
+
+/// @brief  Returns the current level of logging
+/// @return The log level based on logLevels_t enum
+logLevels_t getLogLevel(void);
 
 /// @brief Write a log entry to the log file and terminal
 /// @param level The level of terminal logging

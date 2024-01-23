@@ -377,6 +377,7 @@ static int32_t initMutex()
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
 
+// Register the callback for when the network comes back up
 void registerNetworkUpCallback(networkUpHandler_cb callback)
 {
     printDebug("Set callback for Network is back up");

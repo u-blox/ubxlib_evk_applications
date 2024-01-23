@@ -714,9 +714,11 @@ cleanUp:
     return errorCode;
 }
 
+/// @brief  A really simple ID number generator
+/// @return The next ID number
 static int32_t _getNextId(void)
 {
-    static messageCounter = 0;
+    static int32_t messageCounter = 0;
     return messageCounter++;
 }
 

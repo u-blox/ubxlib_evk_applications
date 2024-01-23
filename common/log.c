@@ -145,37 +145,20 @@ static int32_t createLogFileMutex(void)
 /* ----------------------------------------------------------------
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
+
+/// @brief          Sets the logging level of the application
+/// @param logLevel The log level to set, based on the logLevels_t enum
 void setLogLevel(logLevels_t logLevel)
 {
-    printInfo("Setting log level to %d", logLevel);
+    printAlways("Setting log level to %d", logLevel);
     gLogLevel = logLevel;
 }
 
-void _writeInfoToFile(bool header)
+/// @brief  Returns the current level of logging
+/// @return The log level based on logLevels_t enum
+logLevels_t getLogLevel(void)
 {
-    /** Currently we do not support writing to the log FILE 
-    int result = fs_write(&logFile, buff2, strlen(buff2));
-    if (result < 0) {
-        printf("Failed to write to log file: %d", result);
-    }
-
-    if (header) {
-        result = fs_write(&logFile, "\n", 1);
-        if (result < 0) {
-            printf("Failed to write to log file: %d", result);
-        }
-    }
-
-    if (flushLogFileCache) {
-        flushLogFileCache = false;
-        printf("Flushing log file...");
-        int result = fs_sync(&logFile);
-        if (result != 0)
-            printf("FAILED: %d", result);
-        else
-            printf("Done.\n");
-    }
-    */
+    return gLogLevel;
 }
 
 /// @brief Writes a log message to the terminal and the log file
@@ -206,17 +189,13 @@ void _writeLog(logLevels_t level, bool writeToFile, const char *log, ...)
         if (header)
             printf("\n");
 
-        if (logFileOpen && writeToFile) {
-            _writeInfoToFile(header);
-        }
-
         // DO NOT PUT PRINTLOG OR WRITELOG MARCOS INSIDE
         // THIS MUTEX LOCK - *ONLY* USE PRINTF() !!!!!!
     
     MUTEX_UNLOCK;
 }
 
-void startLogging(const char *pFilename) {
+void initializeLogging() {
     if (createLogFileMutex() < 0)
         return;
 }

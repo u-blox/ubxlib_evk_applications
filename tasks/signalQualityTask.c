@@ -131,8 +131,8 @@ static void measureSignalQuality(void)
                                     rsrp, rsrq, rssi, snr, rxqual, 
                                     logicalCellId, physicalCellId, earfcn, operatorMcc, operatorMnc, pOperatorName);
 
-            publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, false);
             writeAlways(jsonBuffer);
+            publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);
         } else {
             if (errorCode == U_CELL_ERROR_NOT_REGISTERED) {
                 writeInfo("SignalQualityTask: Not registered - can't read cell info");
