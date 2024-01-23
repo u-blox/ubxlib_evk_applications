@@ -155,8 +155,8 @@ static void publishLocation(uLocation_t location)
             location.speedMillimetresPerSecond,
             location.timeUtc);
 
-    publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);
     writeAlways(jsonBuffer);
+    publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);
 }
 
 static void getLocation(void *pParams)
