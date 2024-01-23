@@ -60,6 +60,11 @@ bool setIntParamFromConfig(const char *key, int32_t *param);
 /// @return         True if the bool value was set, False otherwise
 bool setBoolParamFromConfig(const char *key, const char *value, bool *param);
 
+/// @brief          Checks if a parameter exists in the configuration
+/// @param key      The parameter to check for
+/// @return         A valude indicating whether the parameter is in the config
+bool paramExistInConfig(const char *key);
+
 /// @brief          Clears down the memory allocated by the configuration
 void closeConfig(void);
 

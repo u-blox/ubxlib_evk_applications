@@ -41,6 +41,9 @@
 // APP TOPIC NAME HEADER
 #define APP_TOPIC_NAME_DEFAULT "U-BLOX"
 
+// Default App dwell time in milliseconds
+#define APP_DWELL_TIME_DEFAULT 5000
+
 /* ----------------------------------------------------------------
  * STATIC VARIABLES
  * -------------------------------------------------------------- */
@@ -58,7 +61,7 @@ extern char ttyUART[];
 extern char configFileName[];
 
 // How long the application waits before running the app function again
-static int32_t appDwellTimeMS = 5000;
+static int32_t appDwellTimeMS = APP_DWELL_TIME_DEFAULT;
 
 // This flag will pause the main application loop
 static bool pauseMainLoopIndicator = false;
@@ -78,11 +81,13 @@ applicationStates_t gAppStatus = MANUAL;
 // deviceHandle is not static as this is shared between other modules.
 uDeviceHandle_t gCellDeviceHandle;
 
-// This flag is set to true when the application should close tasks and log files.
-// This flag is set to true when Button #1 is pressed.
+// This flag indicates whether the application should start to shutdown
 bool gExitApp = false;
 
-void (*buttonTwoFunc)(void) = NULL;
+// This flag indicates whether the ubxlib logging output is enabled
+// ubxlib logging is only enabled when the gLogLevel is also at 
+// eDEBUG or higher log level.
+bool gUBXLIBLogging = UBXLIB_LOGGING_ON;
 
 // Configures what the first topic will be for MQTT messaging
 // MQTT Topic will be of this format: <APP_TOPIC_NAME>/<IMEI>/<APP_TASK>
@@ -142,12 +147,12 @@ static int32_t initCellularDevice(void)
     int32_t errorCode;
 
     // turn off the UBXLIB printInfo() logging as it is enabled by default (?!)
-    #ifndef UBXLIB_LOGGING_ON
+    if (!gUBXLIBLogging) {
         printDebug("UBXLIB Logging is turned off.");
         uPortLogOff();
-    #else
+    } else {
         printDebug("UBXLIB Logging is turned ON");
-    #endif
+    }
 
     writeInfo("Initiating the UBXLIB Device API...");
     errorCode = uDeviceInit();
@@ -290,29 +295,61 @@ static void setAppTopicName(void)
 {
     memset(gAppTopicHeader, 0, sizeof(gAppTopicHeader));
     const char *appTopicHeader = getConfig("APP_TOPIC_HEADER");
-    if (appTopicHeader == NULL) {
+    if (appTopicHeader != NULL) {
+        strcpy(gAppTopicHeader, appTopicHeader);
+    } else {
 #ifdef BUILD_TARGET_WINDOWS
         getWindowsHostName();
 #endif
 #ifdef BUILD_TARGET_RASPBERRY_PI
         getLinuxHostName();
 #endif
-    } else {
-        // topic header is set in the app.conf file
-        strcpy(gAppTopicHeader, appTopicHeader);
     }
 
     printDebug("APP Topic Name: %s", gAppTopicHeader);
+}
+
+static void setAppLogLevelFromConfig(void)
+{
+    int32_t logLevel;
+    if (setIntParamFromConfig("LOG_LEVEL", &logLevel)) {
+        setLogLevel((logLevels_t) logLevel);
+    }
+}
+
+static void setUBXLIBLogging(void)
+{
+    int32_t ubxlib;
+    if (setIntParamFromConfig("UBXLIB_LOGGING", &ubxlib)) {
+        if (getLogLevel() < eINFO) {
+            gUBXLIBLogging = ubxlib == 1;
+        } else {
+            printInfo("Requested UBXLIB logging, but app log level is set to eINFO or higher");
+            printInfo("UBXLIB logging will not be enabled.");
+            gUBXLIBLogging = false;
+        }
+    }
+}
+
+static void setAppDwellTimeFromConfig(void)
+{
+    int32_t dwellTime;
+    if (setIntParamFromConfig("APP_DWELL_TIME", &dwellTime)) {
+        appDwellTimeMS = dwellTime;
+    }
 }
 
 /// @brief This configures some of the internal global variables
 ///        from the app.conf file if they are present.
 ///        NULL or missing items will be ignored and the default
 ///        setting will be used instead.
-static void configureApplication(void)
+static void setApplicationSettingsFromConfig(void)
 {
     printDebug("Setting internal application settings...");
+    setAppLogLevelFromConfig();
+    setUBXLIBLogging();
     setAppTopicName();
+    setAppDwellTimeFromConfig();
 }
 
 static bool loadAndConfigureApp(void)
@@ -324,7 +361,7 @@ static bool loadAndConfigureApp(void)
         return false;
 
     printConfiguration();
-    configureApplication();
+    setApplicationSettingsFromConfig();
 
     return true;
 }

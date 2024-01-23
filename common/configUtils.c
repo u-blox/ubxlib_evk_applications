@@ -316,11 +316,11 @@ bool setIntParamFromConfig(const char *key, int32_t *param)
     return true;
 }
 
-/// @brief Sets a bool value from a configuration key, if present
-/// @param key The configuration name to return the value of
-/// @param compare The string to compare the config value to
-/// @param param A pointer to the bool value to set
-/// @return True if the bool value was set, False otherwise
+/// @brief          Sets a bool value from a configuration key, if present
+/// @param key      The configuration name to return the value of
+/// @param compare  The string to compare the config value to
+/// @param param    A pointer to the bool value to set
+/// @return         True if the bool value was set, False otherwise
 bool setBoolParamFromConfig(const char *key, const char *compare, bool *param)
 {
     const char *value = getConfig(key);
@@ -328,6 +328,15 @@ bool setBoolParamFromConfig(const char *key, const char *compare, bool *param)
 
     *param = strcmp(value, compare) == 0;
     return true;
+}
+
+/// @brief      Checks if a parameter exists in the configuration
+/// @param key  The parameter to check for
+/// @return     A valude indicating whether the parameter is in the config
+bool paramExistInConfig(const char *key)
+{
+    const char *value = getConfig(key);
+    return value != NULL;
 }
 
 /// @brief frees memory from the configuration malloced array

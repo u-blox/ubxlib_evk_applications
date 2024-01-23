@@ -39,16 +39,20 @@
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
-#define DEFAULT_CONFIG_FILENAME "app.conf"
-#define MAX_CONFIG_FILENAME 200
-#define MAX_TTY_UART_NAME 20
+#define DEFAULT_CONFIG_FILENAME         "app.conf"
+#define MAX_CONFIG_FILENAME             200
+#define MAX_TTY_UART_NAME               20
 
-#define NOT_ENOUGH_ARGUMENTS -1
-#define TTY_UART_NAME_TOO_BIG -2
-#define UNSUPPORTED_CELL_MODULE -3
-#define UNSUPPORTED_GNSS_MODULE -4
-#define CONFIG_FILENAME_TOO_BIG -5
-#define WRONG_UART_PORT_FOR_TARGET -6
+#define ARGS_NOT_ENOUGH_ARGUMENTS       -1
+#define ARGS_TTY_UART_NAME_TOO_BIG      -2
+#define ARGS_UNSUPPORTED_CELL_MODULE    -3
+#define ARGS_UNSUPPORTED_GNSS_MODULE    -4
+#define ARGS_CONFIG_FILENAME_TOO_BIG    -5
+#define ARGS_WRONG_UART_PORT_FOR_TARGET -6
+
+#define APP_BAD_PARAMETERS              -1
+#define APP_STARTUP                     -2
+#define APP_EXIT_STARTUP                -3
 
 /* ----------------------------------------------------------------
  * Command Line Variables
@@ -136,19 +140,19 @@ int32_t parseCommandLine(int arge, char *argv[])
     // if asking for help, exit with default error
     if(arge == 2 && (strcmp(argv[1], "-h") == 0 ||
                      strcmp(argv[1], "--help") == 0)) {
-        return NOT_ENOUGH_ARGUMENTS;
+        return ARGS_NOT_ENOUGH_ARGUMENTS;
     }
 
     // Making sure we have the correct number of arguments
     if (!(arge == 4 || 
           arge == 5)) {
         printf("Not enough command line arguments.\n");
-        return NOT_ENOUGH_ARGUMENTS;
+        return ARGS_NOT_ENOUGH_ARGUMENTS;
     }
 
     // TTY port for cellular module UART communication
     if (strlen(argv[1]) > MAX_TTY_UART_NAME) {
-        return TTY_UART_NAME_TOO_BIG;
+        return ARGS_TTY_UART_NAME_TOO_BIG;
     }
 
 #ifdef BUILD_TARGET_RASPBERRY_PI
@@ -162,7 +166,7 @@ int32_t parseCommandLine(int arge, char *argv[])
 #endif
 #ifdef BUILD_TARGET_WINDOWS
     if (strncmp(argv[1], "/dev/", 5) == 0) {
-        return WRONG_UART_PORT_FOR_TARGET;
+        return ARGS_WRONG_UART_PORT_FOR_TARGET;
     }
 
     char *ptr;
@@ -191,7 +195,7 @@ int32_t parseCommandLine(int arge, char *argv[])
         cellModuleType = U_CELL_MODULE_TYPE_LENA_R8;
     else {
         printf("Unsupported Cellular module type: '%s'\n", argv[2]);
-        return UNSUPPORTED_CELL_MODULE;
+        return ARGS_UNSUPPORTED_CELL_MODULE;
     }
 
     /* GNSS MODULE */
@@ -204,14 +208,14 @@ int32_t parseCommandLine(int arge, char *argv[])
         gnssModuleType = U_GNSS_MODULE_TYPE_M10;
     else {
         printf("Unsupported GNSS module type: '%s'\n", argv[3]);
-        return UNSUPPORTED_GNSS_MODULE;
+        return ARGS_UNSUPPORTED_GNSS_MODULE;
     }
 
     // Configuration file option
     memset(configFileName, 0, sizeof(configFileName));
     if (arge == 5) {
         if (strlen(argv[4]) > MAX_CONFIG_FILENAME) {
-            return CONFIG_FILENAME_TOO_BIG;
+            return ARGS_CONFIG_FILENAME_TOO_BIG;
         }
         strcpy(configFileName, argv[4]);
     } else {
@@ -223,7 +227,7 @@ int32_t parseCommandLine(int arge, char *argv[])
 
 void displayHelp(int32_t errCode)
 {
-    if (errCode == UNSUPPORTED_CELL_MODULE) {
+    if (errCode == ARGS_UNSUPPORTED_CELL_MODULE) {
         printf("Supported Cellular <CellModuleType>:-\n");
         printf("\tSARA-U201\n");
         printf("\tSARA-R5\n");
@@ -234,14 +238,14 @@ void displayHelp(int32_t errCode)
         printf("\tSARA-R410M-02B\n");
         printf("\tLARA-R6\n");
         printf("\tLENA-R8\n\n");
-    } else if (errCode == UNSUPPORTED_GNSS_MODULE) {
+    } else if (errCode == ARGS_UNSUPPORTED_GNSS_MODULE) {
         printf("Supported GNSS <GnssModuleType>:-\n");
         printf("\tM8\n");
         printf("\tM9\n");
         printf("\tM10\n\n");    
-    } else if (errCode == TTY_UART_NAME_TOO_BIG) {
+    } else if (errCode == ARGS_TTY_UART_NAME_TOO_BIG) {
         printf("<ttyDevice> name is too long. Must be 20 characters or less.\n\n");
-    } else if (errCode == WRONG_UART_PORT_FOR_TARGET) {
+    } else if (errCode == ARGS_WRONG_UART_PORT_FOR_TARGET) {
 #ifdef BUILD_TARGET_RASPBERRY_PI
         printf("Wrong UART port for Raspberry PI. Needs to be /dev/ttyXXXX format");
 #endif
@@ -286,11 +290,16 @@ int main(int arge, char *argv[])
     int32_t errCode;
     if ((errCode = parseCommandLine(arge, argv)) != 0) {
         displayHelp(errCode);
-        return -1;
+        return APP_BAD_PARAMETERS;
     }
 
     if (!startupFramework())
-        return -1;
+        return APP_STARTUP;
+
+    if (paramExistInConfig("TEST_STARTUP")) {
+        printWarn("Exiting application for startup test");
+        return APP_EXIT_STARTUP;
+    }
 
     signal(SIGINT, intControlC);
     printDebug("Control-C now hooked");
