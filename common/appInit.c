@@ -274,7 +274,7 @@ static int32_t getWindowsHostName(void)
     }
 
     // set the default App Topic Name on error
-    if (error == U_ERROR_COMMON_DEVICE_ERROR)
+    if (error != 0)
         strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT); 
 
     return error;
@@ -282,10 +282,19 @@ static int32_t getWindowsHostName(void)
 #endif
 
 #ifdef BUILD_TARGET_RASPBERRY_PI
-static void getLinuxHostName(void)
+static int32_t getLinuxHostName(void)
 {
-    printWarn("Raspberry PI hostname is not implemented yet!");
-    strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT);
+    int32_t error = gethostname(gAppTopicHeader, sizeof(gAppTopicHeader));
+    if (error != 0) {
+        printError("Failed to get hostname: %d", error);
+        error = U_ERROR_COMMON_DEVICE_ERROR;
+    }
+
+    // set the default App Topic Name on error
+    if (error != 0)
+        strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT); 
+
+    return error;
 }
 #endif
 
