@@ -128,6 +128,7 @@ bool mqttConnectionIsUp(void)
 /// @param value    not used.
 static void intControlC(int value)
 {
+    printf("*** CTRL-C ***\n");
     gExitApp = true;
 
     // reset the control-c interrupt so it 
