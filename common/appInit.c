@@ -284,7 +284,7 @@ static int32_t getWindowsHostName(void)
 #ifdef BUILD_TARGET_RASPBERRY_PI
 static void getLinuxHostName(void)
 {
-    printWarn("Raspberry PI hostname is not implemented yet!")
+    printWarn("Raspberry PI hostname is not implemented yet!");
     strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT);
 }
 #endif
