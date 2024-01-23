@@ -5,7 +5,7 @@ The purpose of this resporitory is to provide example EVK applications which run
 As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or Single Cellular + GNSS ADP boards (NEO-M8)
 
 # Raspberry PI
-Please set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
+Set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
 ## Building
 Change to the application folder, [Cellular Tracker](cellular_tracker) for example, and type:  
@@ -19,11 +19,11 @@ This is a bash script which will automatically create a symbol link to the corre
 ttyEVK -> ttyUSB0 (2 UARTs - old rev EVB)  
 ttyEVK -> ttyUSB2 (4 UARTs - new rev EVB)  
   
-Please run it with `sudo ./setTTY2EVK.sh` after you have connected the EVK to the Raspberry PI USB port.  
+Run `sudo ./setTTY2EVK.sh` after you have connected the EVK to the Raspberry PI USB port.  
 Please note, this is not work if you have other ttyUSB devices connected! Only one EVK is supported.
 
 # Windows
-Please set the `BUILD_TARGET_WINDOWS` #define in the application's [config.h](cellular_tracker/config/config.h) file.
+Set the `BUILD_TARGET_WINDOWS` #define in the application's [config.h](cellular_tracker/config/config.h) file.
 
 ## Building
 Use the VisualStudio Code IDE and install the Micorsoft C++ compilers/dev kit. Install the CMake Tools extension.  
