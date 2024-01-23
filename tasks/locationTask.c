@@ -155,17 +155,15 @@ static void publishLocation(uLocation_t location)
             location.speedMillimetresPerSecond,
             location.timeUtc);
 
-    publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, false);
+    publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);
     writeAlways(jsonBuffer);
 }
 
 static void getLocation(void *pParams)
 {
-    static int32_t count = 0;
-
     if (uPortMutexTryLock(TASK_MUTEX, 0) == 0) {
         uLocation_t location;   
-        printDebug("Requesting location information [%d]...", count++);
+        printDebug("Requesting location information...");
         int32_t errorCode = uLocationGet(*pGnssHandle, U_LOCATION_TYPE_GNSS,
                                             NULL, NULL, &location, keepGoing);
         if (errorCode == 0) {

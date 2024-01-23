@@ -147,7 +147,7 @@ static int32_t createLogFileMutex(void)
  * -------------------------------------------------------------- */
 void setLogLevel(logLevels_t logLevel)
 {
-    printInfo("Setting log level to %d", logLevel);
+    printTrace("Setting log level to %d", logLevel);
     gLogLevel = logLevel;
 }
 

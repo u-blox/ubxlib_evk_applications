@@ -22,6 +22,7 @@
 
 #include "common.h"
 #include "fileSystem.h"
+#include "configUtils.h"
 
 #ifdef BUILD_TARGET_WINDOWS
 #include "../ubxlib/port/platform/windows/src/u_port_clib_platform_specific.h" 
@@ -95,12 +96,21 @@ static void freeConfigMemory(void)
 /* ----------------------------------------------------------------
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
-void parseConfiguration()
+
+/// @brief  Parse the configuration text for the config items
+/// @return 0 on success, negative on failure
+int32_t parseConfiguration(void)
 {
     appConfigList_t *current, *newNode;
     appConfigList_t **head = &configList;
 
     char *pSaveCfg;
+
+    if (configText == NULL) {
+        configItemCount = 0;
+        printWarn("Configuration is empty, so can't parse");
+        return U_ERROR_COMMON_EMPTY;
+    }
 
     // Use strtok_r to tokenize each line
     char *line = strtok_r((char *)configText, "\n", &pSaveCfg);
@@ -141,10 +151,15 @@ void parseConfiguration()
     }
 
 cleanUp:
+    // newMode will be set to NULL if the memory allocation failed
     if (newNode == NULL) {
+        // free what we have already parsed
         freeConfigMemory();
         configItemCount = 0;
+        return U_ERROR_COMMON_NO_MEMORY;
     }
+
+    return U_ERROR_COMMON_SUCCESS;
 }
 
 size_t getConfigItemCount(void)
@@ -152,8 +167,9 @@ size_t getConfigItemCount(void)
     return configItemCount;
 }
 
-/// @brief Sets the internal configuration 
-/// @param configurationText The configuration to copy
+/// @brief  Sets the internal configuration - useful for non-file based applications
+///         which can't 'file load' the configuration.
+/// @param configurationText The configuration to use
 void loadConfigText(const char *configurationText)
 {
     int32_t errorCode = U_ERROR_COMMON_SUCCESS;
@@ -188,8 +204,6 @@ int32_t loadConfigFile(const char *filename)
         errorCode = U_ERROR_COMMON_NOT_INITIALISED;
     }
 
-    printInfo("Loading configuration: %s", filename);
-
     const char *path = fsPath(filename);
     if (!fsFileExists(path)) {
         writeFatal("Configuration file not found: %s", filename);
@@ -205,7 +219,7 @@ int32_t loadConfigFile(const char *filename)
         goto cleanUp;
     }
 
-    printDebug("Configuration file size: %d", fileSize);
+    printDebug("%s configuration file size: %d", filename, fileSize);
 
     // Add one more byte for the terminating '\0' as it's text
     configText = (char *)pUPortMalloc((size_t) fileSize+1);
@@ -252,6 +266,12 @@ void printConfiguration(void)
     appConfigList_t *kvp = configList;
     const char *value;
 
+    if (configItemCount == 0) {
+        printWarn("No configuration items loaded.");
+        return;
+    }
+
+    printDebug("Configuration Items:");
     while(kvp != NULL) {
         value = getConfig(kvp->key);
         if (value == NULL) value = "N/A";

@@ -27,39 +27,40 @@
  * PUBLIC FUNCTIONS
  * -------------------------------------------------------------- */
 
-/// @brief  Returns the number of configuration items loaded
-/// @return The number of configuration items loaded
+/// @brief          Returns the number of configuration items loaded
+/// @return         The number of configuration items loaded
 size_t getConfigItemCount(void);
 
-/// @brief Loads a configuration file ready for indexing
+/// @brief          Loads a configuration file ready for indexing
 /// @param filename The filename of the configuration file
-/// @return 0 on success, negative on failure
+/// @return         0 on success, negative on failure
 int32_t loadConfigFile(const char *filename);
 
-/// @brief Parses the loaded configuration text file
-void parseConfiguration(void);
+/// @brief          Parses the loaded configuration text file
+/// @return         0 on success, negative on failure
+int32_t parseConfiguration(void);
 
-/// @brief Prints the configuration items
+/// @brief          Prints the configuration items
 void printConfiguration(void);
 
-/// @brief returns the specified configuration value
-/// @param key The configuration name to return the value of
-/// @return The configuration value on succes, NULL on failure
+/// @brief          Returns the specified configuration value
+/// @param key      The configuration name to return the value of
+/// @return         The configuration value on succes, NULL on failure
 const char *getConfig(const char *key);
 
-/// @brief Sets a int value from a configuration key, if present
-/// @param key The configuration name to return the value of
-/// @param param A pointer to the int value to set
-/// @return True if the int value was set, False otherwise
+/// @brief          Sets a int value from a configuration key, if present
+/// @param key      The configuration name to return the value of
+/// @param param    A pointer to the int value to set
+/// @return         True if the int value was set, False otherwise
 bool setIntParamFromConfig(const char *key, int32_t *param);
 
-/// @brief Sets a bool value from a configuration key, if present
-/// @param key The configuration name to return the value of
-/// @param param A pointer to the bool value to set
-/// @return True if the bool value was set, False otherwise
+/// @brief          Sets a bool value from a configuration key, if present
+/// @param key      The configuration name to return the value of
+/// @param param    A pointer to the bool value to set
+/// @return         True if the bool value was set, False otherwise
 bool setBoolParamFromConfig(const char *key, const char *value, bool *param);
 
-/// @brief Clears down the memory allocated by the configuration
+/// @brief          Clears down the memory allocated by the configuration
 void closeConfig(void);
 
 #endif

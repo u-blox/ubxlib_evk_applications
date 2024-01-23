@@ -18,6 +18,13 @@
 #include "taskControl.h"
 #include "cellInit.h"
 
+#ifdef BUILD_TARGET_WINDOWS
+#include <WinSock2.h>
+#endif
+#ifdef BUILD_TARGET_RASPBERRY_PI
+#include <unistd.h>
+#endif
+
 /* ----------------------------------------------------------------
  * DEFINES
  * -------------------------------------------------------------- */
@@ -27,6 +34,12 @@
 #define APP_DWELL_TIME_MS_MINIMUM 5000
 #define APP_DWELL_TIME_MS_DEFAULT APP_DWELL_TIME_MS_MINIMUM;
 #define APP_DWELL_TICK_MS 50
+
+// MQTT Topic will be of this format: <APP_TOPIC_NAME>/<IMEI>/<APP_TASK>
+#define MAX_APP_TOPIC_NAME 30
+
+// APP TOPIC NAME HEADER
+#define APP_TOPIC_NAME_DEFAULT "U-BLOX"
 
 /* ----------------------------------------------------------------
  * STATIC VARIABLES
@@ -39,17 +52,18 @@ extern int32_t cellModuleType;
 // Command line argument <gnssModuleType> which represents the u_cell_module_type.h value
 extern char ttyUART[];
 
-// Command line argument [config] which represents the configuration file to load.
-// If not specified then the configuration file will be CONFIGURATION_FILENAME default.
+// Command line argument [config] which represents the configuration
+// file to load. If not specified then the configuration file will be
+// set to DEFAULT_CONFIG_FILENAME
 extern char configFileName[];
 
+// How long the application waits before running the app function again
 static int32_t appDwellTimeMS = 5000;
 
 // This flag will pause the main application loop
 static bool pauseMainLoopIndicator = false;
 
-static bool appFinalized = false;
-
+// The code value to use when exiting the application with exit(exitcode);
 static int32_t exitCode = 0;
 
 /* ----------------------------------------------------------------
@@ -69,6 +83,10 @@ uDeviceHandle_t gCellDeviceHandle;
 bool gExitApp = false;
 
 void (*buttonTwoFunc)(void) = NULL;
+
+// Configures what the first topic will be for MQTT messaging
+// MQTT Topic will be of this format: <APP_TOPIC_NAME>/<IMEI>/<APP_TASK>
+char gAppTopicHeader[MAX_APP_TOPIC_NAME+1];
 
 /* ----------------------------------------------------------------
  * EXTERNAL GLOBAL VARIABLES
@@ -193,7 +211,6 @@ static int32_t closeCellularDevice(void)
         return U_ERROR_COMMON_NOT_INITIALISED;
     }
 
-    printf("uDeviceClose()\n");
     errorCode = uDeviceClose(gCellDeviceHandle, powerOff);
     if (errorCode < 0) {
         writeWarn("Failed to close the cellular module with uDeviceClose(): %d", errorCode);
@@ -205,19 +222,111 @@ static int32_t closeCellularDevice(void)
 
 static int32_t deinitUbxlibDevices(void)
 {
-    int32_t errorCode;
-    
-    printf("uDeviceDeinit()\n");
-    errorCode = uDeviceDeinit();
+    int32_t errorCode = uDeviceDeinit();
     if (errorCode < 0) {
         writeWarn("Failed to de-initialize the device API with uDeviceDeinit(): %d", errorCode);
         return errorCode;
     }
 
-    printf("uPortDeinit()\n");
     uPortDeinit();
 
     return U_ERROR_COMMON_SUCCESS;
+}
+
+#ifdef BUILD_TARGET_WINDOWS
+static int32_t startUpWinSock(void)
+{
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    int err;
+
+    /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+    wVersionRequested = MAKEWORD(2, 2);
+
+    err = WSAStartup(wVersionRequested, &wsaData);
+    if (err != 0) {
+        /* Tell the user that we could not find a usable */
+        /* Winsock DLL.                                  */
+        printError("WSAStartup failed with error: %d\n", err);
+        return U_ERROR_COMMON_DEVICE_ERROR;
+    }
+
+    return U_ERROR_COMMON_SUCCESS;
+}
+
+static int32_t getWindowsHostName(void)
+{
+    int32_t error = startUpWinSock();
+    if (error != 0) {
+        printError("Failed to start WinSock: %d", error);
+        error = U_ERROR_COMMON_DEVICE_ERROR;
+    } else {
+        error = gethostname(gAppTopicHeader, sizeof(gAppTopicHeader));
+        if (error != 0) {
+            printError("Failed to get hostname: %d", error);
+            error = U_ERROR_COMMON_DEVICE_ERROR;
+        }
+    }
+
+    // set the default App Topic Name on error
+    if (error == U_ERROR_COMMON_DEVICE_ERROR)
+        strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT); 
+
+    return error;
+}
+#endif
+
+#ifdef BUILD_TARGET_RASPBERRY_PI
+static void getLinuxHostName(void)
+{
+    printWarn("Raspberry PI hostname is not implemented yet!")
+    strcpy(gAppTopicHeader, APP_TOPIC_NAME_DEFAULT);
+}
+#endif
+
+/// @brief Sets the Application's topic name from either
+///        the app.conf setting, or if NULL, the hostname
+static void setAppTopicName(void)
+{
+    memset(gAppTopicHeader, 0, sizeof(gAppTopicHeader));
+    const char *appTopicHeader = getConfig("APP_TOPIC_HEADER");
+    if (appTopicHeader == NULL) {
+#ifdef BUILD_TARGET_WINDOWS
+        getWindowsHostName();
+#endif
+#ifdef BUILD_TARGET_RASPBERRY_PI
+        getLinuxHostName();
+#endif
+    } else {
+        // topic header is set in the app.conf file
+        strcpy(gAppTopicHeader, appTopicHeader);
+    }
+
+    printDebug("APP Topic Name: %s", gAppTopicHeader);
+}
+
+/// @brief This configures some of the internal global variables
+///        from the app.conf file if they are present.
+///        NULL or missing items will be ignored and the default
+///        setting will be used instead.
+static void configureApplication(void)
+{
+    printDebug("Setting internal application settings...");
+    setAppTopicName();
+}
+
+static bool loadAndConfigureApp(void)
+{
+    if (loadConfigFile(configFileName) < 0)
+        return false;
+
+    if (parseConfiguration() < 0)
+        return false;
+
+    printConfiguration();
+    configureApplication();
+
+    return true;
 }
 
 /* ----------------------------------------------------------------
@@ -324,12 +433,11 @@ void finalize(applicationStates_t appState)
 
     deinitUbxlibDevices();
 
-    printf("\n\n\nApplication finished.\n");
+    printf("\nApplication finished.\n");
 
     if (appState == ERROR && exitCode == 0)
         exit(-1);
     else {
-        printf("Exit code: %d", exitCode);
         exit(exitCode);
     }
 }
@@ -358,11 +466,8 @@ bool startupFramework(void)
     
     displayAppVersion();
 
-    if (loadConfigFile(configFileName) < 0)
+    if (!loadAndConfigureApp())
         return false;
-
-    parseConfiguration();
-    printConfiguration();
 
     // initialise the cellular module
     gAppStatus = INIT_DEVICE;

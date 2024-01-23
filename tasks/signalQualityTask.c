@@ -131,7 +131,7 @@ static void measureSignalQuality(void)
                                     rsrp, rsrq, rssi, snr, rxqual, 
                                     logicalCellId, physicalCellId, earfcn, operatorMcc, operatorMnc, pOperatorName);
 
-            publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, false);
+            publishMQTTMessage(topicName, jsonBuffer, U_MQTT_QOS_AT_MOST_ONCE, true);
             writeAlways(jsonBuffer);
         } else {
             if (errorCode == U_CELL_ERROR_NOT_REGISTERED) {
