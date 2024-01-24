@@ -156,33 +156,8 @@ static int32_t getNetworkInfo(void)
     return errorCode;
 }
 
-static void networkStatusCallback(uDeviceHandle_t devHandle,
-                             uNetworkType_t netType,
-                             bool isUp,
-                             uNetworkStatus_t *pStatus,
-                             void *pParameter)
+static void checkNetworkInformation(uNetworkStatus_t *pStatus)
 {
-    // Ignore the Circuit Switched domain here as we are only interested in PS
-    if (pStatus->cell.domain != U_CELL_NET_REG_DOMAIN_PS)
-        return;
-
-    bool prevNetworkUp = gIsNetworkUp;
-    gIsNetworkUp = isUp;
-
-    // Handle the network going up 
-    if (!prevNetworkUp && gIsNetworkUp) {
-        printWarn("Network is back up again");
-        
-        // signal must be true because the network is back up
-        gIsNetworkSignalValid = true;
-        networkUpCounter++;
-        
-        if(networkUpCallback != NULL) {
-            printDebug("Calling network back up callback...");
-            networkUpCallback();
-        }
-    }
-
     uCellNetStatus_t cellStatus = (uCellNetStatus_t) pStatus->cell.status;
     if (gIsNetworkUp) {
         gAppStatus = REGISTERED;
@@ -202,6 +177,44 @@ static void networkStatusCallback(uDeviceHandle_t devHandle,
 
         clearOperatorInfo();
     }
+}
+
+static void handleNetworkIsUp()
+{
+    gAppStatus = REGISTERED;
+    gIsNetworkSignalValid = true;
+    networkUpCounter++;
+    
+    if(networkUpCallback != NULL) {
+        printDebug("Calling network back up callback...");
+        networkUpCallback();
+    }
+}
+
+static void checkNetworkIsBackUp(bool isUp)
+{
+    bool prevNetworkUp = gIsNetworkUp;
+    gIsNetworkUp = isUp;
+
+    // Handle the network going up 
+    if (!prevNetworkUp && gIsNetworkUp) {
+        printWarn("Network is back up again");
+        handleNetworkIsUp();
+    }
+}
+
+static void networkStatusCallback(uDeviceHandle_t devHandle,
+                             uNetworkType_t netType,
+                             bool isUp,
+                             uNetworkStatus_t *pStatus,
+                             void *pParameter)
+{
+    // Ignore the Circuit Switched domain here as we are only interested in PS
+    if (pStatus->cell.domain != U_CELL_NET_REG_DOMAIN_PS)
+        return;
+
+    checkNetworkIsBackUp(isUp);
+    checkNetworkInformation(pStatus);
 }
 
 static bool usingRestrictedAPN(void)
@@ -268,17 +281,9 @@ static int32_t startNetworkRegistration(void)
         return errorCode;
     }
 
-    gAppStatus = REGISTERED;        // set the status of the application
     gIsNetworkUp = true;            // Yep, we've just connected.
-    gIsNetworkSignalValid = true;   // it must be valid as we've just connected!
-    networkUpCounter=1;             // This is the first connection
+    handleNetworkIsUp();
 
-    // Manually call the network up callback is it
-    // won't happen on the uNetworkInterfaceUp() call 
-    networkUpCallback();
-
-    // This info will be sent next time the Signal Quality message is sent.
-    getNetworkInfo();
     return 0;
 }
 

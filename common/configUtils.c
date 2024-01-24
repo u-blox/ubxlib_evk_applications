@@ -298,7 +298,7 @@ const char *getConfig(const char *key)
         }
     }
 
-    printWarn("Failed to find '%s' key", key);
+    printDebug("Failed to find '%s' key", key);
     return NULL;
 }
 
