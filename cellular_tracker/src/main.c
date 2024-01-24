@@ -94,7 +94,7 @@ void networkUpBackUpHandler(void)
     // if the publish fails, then on the next app loop it will check again to publish
     needToPublishModuleInfo = errorCode != 0;
     if (needToPublishModuleInfo) {
-        printWarn("Unable to publish module info at the moment: %d", errorCode);
+        printDebug("Unable to publish module info at the moment: %d", errorCode);
     }
 
     U_PORT_MUTEX_UNLOCK(appMutex);

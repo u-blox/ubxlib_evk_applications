@@ -785,22 +785,22 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
 {
     // if the event queue handle is not valid, don't send the message
     if (TASK_QUEUE < 0) {
-        writeWarn("Not publishing MQTT message, MQTT Event Queue handle is not valid");
+        writeDebug("Not publishing MQTT message, MQTT Event Queue handle is not valid");
         return U_ERROR_COMMON_NOT_INITIALISED;
     }
 
     if (!TASK_IS_RUNNING) {
-        writeWarn("Not publishing MQTT message, MQTT Task not running yet");
+        writeDebug("Not publishing MQTT message, MQTT Task not running yet");
         return U_ERROR_COMMON_NOT_INITIALISED;
     }
 
     if (!IS_NETWORK_AVAILABLE) {
-        writeWarn("Not publishing MQTT message, Network is not available at the moment");
+        writeDebug("Not publishing MQTT message, Network is not available at the moment");
         return U_ERROR_COMMON_TEMPORARY_FAILURE;
     }
 
     if (pContext == NULL || !uMqttClientIsConnected(pContext)) {
-        writeWarn("Not publishing MQTT message, not connected to %s", MQTT_TYPE_NAME);
+        writeDebug("Not publishing MQTT message, not connected to %s", MQTT_TYPE_NAME);
         tryToConnectMQTT = true;
         return U_ERROR_COMMON_NOT_INITIALISED;
     }
@@ -828,7 +828,7 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
 
     if (failed) {
         errorCode = U_ERROR_COMMON_NO_MEMORY;
-        writeInfo("Not publishing MQTT message, failed to allocate memory for message.");
+        writeError("Not publishing MQTT message, failed to allocate memory for message.");
         goto cleanUp;
     }
 
