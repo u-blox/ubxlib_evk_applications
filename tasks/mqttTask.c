@@ -222,7 +222,7 @@ static int32_t connectBroker(void)
     setIntParamFromConfig("MQTT_TIMEOUT", &(connection.inactivityTimeoutSeconds));
     setBoolParamFromConfig("MQTT_KEEPALIVE", "TRUE", &(connection.keepAlive));
 
-    writeInfo("Connecting to %s on %s...", MQTT_TYPE_NAME, connection.pBrokerNameStr);    
+    writeInfo("Connecting to %s on %s...", MQTT_TYPE_NAME, connection.pBrokerNameStr);
 
     int32_t errorCode = uMqttClientConnect(pContext, &connection);
     if (errorCode != 0) {
