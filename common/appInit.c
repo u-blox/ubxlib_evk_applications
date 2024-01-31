@@ -208,7 +208,6 @@ static int32_t closeCellularDevice(void)
 {
     writeInfo("Turning off Cellular Module...");
     int32_t errorCode;
-    
     bool powerOff = false;
 
     if (gCellDeviceHandle == NULL) {
@@ -509,7 +508,7 @@ bool startupFramework(void)
 
     setLogLevel(LOGGING_LEVEL);
     initializeLogging();
-    
+
     displayAppVersion();
 
     if (!loadAndConfigureApp())
