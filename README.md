@@ -4,6 +4,9 @@ The purpose of this resporitory is to provide example EVK applications which run
 
 As this application uses Cellular EVKs you can use any Combo Cellular+GNSS or Single Cellular + GNSS ADP boards (NEO-M8)
 
+# ubxlib
+This application uses the ubxlib library for communicating to the modules. ubxlib will not be retreived with the first `git pull` as this is a submodule. Use `git submodule update --init --recursive` to download it.
+
 # Raspberry PI
 For an example for the cellular tracker application:  
 Set the `BUILD_TARGET_RASPBERRY_PI` #define in the application's [config.h](cellular_tracker/config/config.h) file.
