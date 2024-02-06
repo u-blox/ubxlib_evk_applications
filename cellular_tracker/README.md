@@ -13,7 +13,7 @@ clone this repository on to the raspberry PI:
 - git clone https://github.com/u-blox/ubxlib_evk_applications  
 
 You will need to install cmake, libssl-dev and libgpiod-dev  
-- sudo apt-get install cmake  
+- sudo apt-get install cmake  (VERSION 3.19+)
 - sudo apt-get install libssl-dev  
 - sudo apt-get install libsgpiod-dev
 
