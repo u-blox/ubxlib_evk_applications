@@ -85,4 +85,4 @@ Application tasks subscribe to a particular MQTT topic so they can listen to com
  - STOP_TASK : Stops the task loop
 
 # Application task diagram
-![Basic appTask diagram](../../readme_images/AppTask.PNG)
+![Basic appTask diagram](../readme_images/AppTask.PNG)
