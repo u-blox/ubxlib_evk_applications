@@ -12,11 +12,6 @@ Each `appTask` has a mutex which is used to notify when a task is in operation, 
 Each `appTask` has a task thread which is used for its loop function.
 
 # Implemented application tasks
-## LED Task
-This task monitors the gAppStatus variable and changes the LEDs to show the current state. As this is a running task all three LEDS can be blinked, flashed, turned on/off etc.
-
-The `gAppStatus` is based on an enumerator which inturn has it's own LED configuration for that status.
-
 ## Registration Task
 This task monitors the registration status and calls the required `NetworkUp()` function if requried. The number of times the networks goes up is counted.
 
