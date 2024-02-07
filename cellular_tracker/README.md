@@ -5,6 +5,13 @@ All collected information is sent to the cloud via the embedded MQTT/MQTT-SN cli
 
 The application starts monitoring the cellular signal quality and once there is a GNSS fix, the location is also published to the cloud. If the START_CELL_SCAN message is received over the `NetworkScanControl` MQTT topic, a base station scan is initialized.
 
+## Command line arguments
+COM Number CellModuleType GnssModuleType [config]  
+COM number is either /dev/ttyUSBx for Linux or the com port NUMBER in windows  
+CelModuleType is SARA-R422, SARA-R5, LARA-R6 or LENA-R8  
+GnssModuleType is M8 or M9 or M10  
+You can opeiot specify the configuration file   
+
 # Raspberry PI
 ## Configuring the building environment
 The Raspberry PI is used to compile the application.
@@ -13,7 +20,7 @@ clone this repository on to the raspberry PI:
 - git clone https://github.com/u-blox/ubxlib_evk_applications  
 
 You will need to install cmake, libssl-dev and libgpiod-dev  
-- sudo apt-get install cmake  
+- sudo apt-get install cmake  (VERSION 3.19+)
 - sudo apt-get install libssl-dev  
 - sudo apt-get install libsgpiod-dev
 
