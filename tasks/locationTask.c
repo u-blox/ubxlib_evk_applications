@@ -40,8 +40,6 @@
 
 #define TEN_MILLIONTH           10000000
 
-#define FRACTION_FORMAT(v, d)   fractionConvert(v,&whole, &fraction, d), whole, fraction
-
 /* ----------------------------------------------------------------
  * EXTERNAL VARIABLES
  * -------------------------------------------------------------- */
@@ -107,9 +105,9 @@ static bool keepGoing(void *pParam)
 }
 
 static char fractionConvert(int32_t x1e7,
-                          int32_t *pWhole,
-                          int32_t *pFraction,
-                          int32_t divider)
+                            int32_t divider,
+                            int32_t *pWhole,
+                            int32_t *pFraction)
 {
     char prefix = ' ';
 
@@ -147,10 +145,14 @@ static void publishLocation(uLocation_t location)
 
     struct tm *t = gmtime((time_t *)&location.timeUtc);
 
+    int32_t latWhole, latFraction, longWhole, longFraction;
+    char latPrefix  = fractionConvert(location.latitudeX1e7,  TEN_MILLIONTH, &latWhole,  &latFraction);
+    char longPrefix = fractionConvert(location.longitudeX1e7,  TEN_MILLIONTH, &longWhole, &longFraction);
+
     snprintf(jsonBuffer, JSON_STRING_LENGTH, format, timestamp,
             location.altitudeMillimetres,
-            FRACTION_FORMAT(location.latitudeX1e7,  TEN_MILLIONTH),
-            FRACTION_FORMAT(location.longitudeX1e7, TEN_MILLIONTH),
+            latPrefix, latWhole, latFraction,
+            longPrefix, longWhole, longFraction,
             location.radiusMillimetres,
             location.speedMillimetresPerSecond,
             location.timeUtc);
@@ -167,7 +169,7 @@ static void getLocation(void *pParams)
         int32_t errorCode = uLocationGet(*pGnssHandle, U_LOCATION_TYPE_GNSS,
                                             NULL, NULL, &location, keepGoing);
         if (errorCode == 0) {
-            printDebug("Got location information, publishing");
+            printDebug("Got location information [%d, %d], publishing", location.latitudeX1e7, location.longitudeX1e7);
             publishLocation(location);
         } else {
             if (errorCode == U_ERROR_COMMON_TIMEOUT)

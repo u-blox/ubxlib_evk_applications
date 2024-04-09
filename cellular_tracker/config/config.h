@@ -44,13 +44,4 @@
 //#define LOGGING_LEVEL eINFO            // taken from logLevels_t
 #define LOGGING_LEVEL eDEBUG            // taken from logLevels_t
 
-
-/* ----------------------------------------------------------------
- * UBXLIB DEBUG LOGGING     Uncomment this line to enable the 
- *                          ubxlib logging system. This will print
- *                          out the ubxlib logging to the terminal
- *                          but NOT to the log file.
- * -------------------------------------------------------------- */
-#define UBXLIB_LOGGING_ON 1
-
 #endif

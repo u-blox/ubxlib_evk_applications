@@ -87,7 +87,7 @@ bool gExitApp = false;
 // This flag indicates whether the ubxlib logging output is enabled
 // ubxlib logging is only enabled when the gLogLevel is also at 
 // eDEBUG or higher log level.
-bool gUBXLIBLogging = UBXLIB_LOGGING_ON;
+bool gUBXLIBLogging = false;
 
 // Configures what the first topic will be for MQTT messaging
 // MQTT Topic will be of this format: <APP_TOPIC_NAME>/<IMEI>/<APP_TASK>
