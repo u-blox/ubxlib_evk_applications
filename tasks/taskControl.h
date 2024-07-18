@@ -171,6 +171,11 @@ typedef struct TaskRunner {
 int32_t initTasks();
 int32_t initSingleTask(taskTypeId_t id);
 
+/// @brief Checks if the Task is enabled in the App.config file
+/// @param taskName The name of the task to check
+/// @return true if it is enabled, false otherwise.
+bool checkTaskEnabled(char *taskName);
+
 /// @brief Runs a appTask from it's start function in its taskConfig
 /// @param id The ID of the appTask to start
 /// @param waitForFunc A function which returns when the function should continue

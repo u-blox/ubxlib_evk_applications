@@ -215,15 +215,31 @@ int32_t initSingleTask(taskTypeId_t id)
     return U_ERROR_COMMON_SUCCESS;
 }
 
+bool checkTaskEnabled(char *name)
+{
+    bool enabled = true;
+    char taskName[50];
+    sprintf(taskName, "TASK_%s", name);
+
+    if(!setBoolParamFromConfig(taskName, "ENABLED", &enabled))
+        printDebug("%s task is not listed in the app.config file, default to enabling", name);
+
+    return enabled;
+}
+
 int32_t initTasks()
 {
     int32_t errorCode = U_ERROR_COMMON_SUCCESS;
     taskRunner_t *runner = taskRunners;
 
     for(int i=0; i<NUM_ELEMENTS(taskRunners); i++) {
-        errorCode = initSingleTask(runner->config.id);
-        if (errorCode < 0)
-            break;
+        if (checkTaskEnabled(runner->config.name)) {
+            errorCode = initSingleTask(runner->config.id);
+            if (errorCode < 0)
+                break;
+        } else {
+            printDebug("%s task is disabled in the app.config file, not initialising!", runner->config.name);
+        }
 
         runner++;
     }

@@ -116,34 +116,36 @@ int32_t parseConfiguration(void)
     char *line = strtok_r((char *)configText, "\n", &pSaveCfg);
     while (line != NULL) {
         // Skip comments
-        if (line[0] == '#') {
-            line = strtok_r(NULL, "\n", &pSaveCfg);
-            continue;
-        }
+        if (line[0] != '#') {
+            
+            // Find the position of " " (space) => KEY<space>VALUE
+            char *separator = strstr(line, " ");
 
-        // Find the position of " " (space)
-        char *separator = strstr(line, " ");
+            if (separator != NULL) {
+                // Extract key and value
+                *separator = '\0';  // Replace separator ' ' with null terminator
+                char *key = line;
+                char *value = separator + 1;  // Skip ' '(space) and point to the value
 
-        if (separator != NULL) {
-            // Extract key and value
-            *separator = '\0';  // Replace separator ' ' with null terminator
-            char *key = line;
-            char *value = separator + 1;  // Skip ' '(space) and point to the value
+                char *valueEnd = strstr(value, "\r");
+                if (valueEnd != NULL)
+                    *valueEnd='\0';
 
-            newNode = createConfigKVP(key, value);
-            // failure returns NULL, so exit
-            if (newNode == NULL)
-                goto cleanUp;
+                newNode = createConfigKVP(key, value);
+                // failure returns NULL, so exit
+                if (newNode == NULL)
+                    goto cleanUp;
 
-            if(configItemCount == 0) {
-                *head = newNode;
-                current = *head;
-            } else {
-                current->pNext = newNode;
-                current = current->pNext;
+                if(configItemCount == 0) {
+                    *head = newNode;
+                    current = *head;
+                } else {
+                    current->pNext = newNode;
+                    current = current->pNext;
+                }
+
+                configItemCount++;
             }
-
-            configItemCount++;
         }
 
         // Move to the next line
@@ -243,7 +245,7 @@ int32_t loadConfigFile(const char *filename)
     // load the file entire file
     size_t count = fsRead(configText, fileSize, configFile);
 
-    // check the file reading was fully succesful
+    // check the file reading was fully successful
     if (count != fileSize) {
         writeError("Didn't read all %d bytes from %s file, only read %d", fileSize, filename, count);
         errorCode = U_ERROR_COMMON_DEVICE_ERROR;
@@ -275,7 +277,7 @@ void printConfiguration(void)
     while(kvp != NULL) {
         value = getConfig(kvp->key);
         if (value == NULL) value = "N/A";
-        printDebug("   Key #%d: %s = %s", count, kvp->key, value);
+        printDebug("   Key #%d: %s = '%s'", count, kvp->key, value);
 
         kvp = kvp->pNext;
         count++;

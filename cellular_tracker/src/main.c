@@ -109,7 +109,8 @@ bool appFunction(void)
         networkUpBackUpHandler();
     }
 
-    queueLocationNow(NULL);
+    if (checkTaskEnabled("Location"))
+        queueLocationNow(NULL);
 
     return true;
 }
@@ -322,6 +323,10 @@ int main(int arge, char *argv[])
     printInfo("Starting MQTT...");
     if (runTask(MQTT_TASK, mqttConnectionIsUp) != U_ERROR_COMMON_SUCCESS)
         finalize(ERROR);
+
+    // Run other tasks here now that Network and MQTT are up and running...
+    // ...
+    // ...
 
     // Subscribe to the main AppControl topic for remote control the main application (this)
     subscribeToTopicAsync(APP_CONTROL_TOPIC, U_MQTT_QOS_AT_MOST_ONCE, callbacks, NUM_ELEMENTS(callbacks));

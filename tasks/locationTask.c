@@ -151,7 +151,7 @@ static void publishLocation(uLocation_t location)
 
     snprintf(jsonBuffer, JSON_STRING_LENGTH, format, timestamp,
             location.altitudeMillimetres,
-            latPrefix, latWhole, latFraction,
+            latPrefix,  latWhole,  latFraction,
             longPrefix, longWhole, longFraction,
             location.radiusMillimetres,
             location.speedMillimetresPerSecond,

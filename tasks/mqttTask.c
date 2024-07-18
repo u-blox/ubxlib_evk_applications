@@ -844,7 +844,7 @@ int32_t publishMQTTMessage(const char *pTopicName, const char *pMessage, uMqttQo
     }
 
     if (errorCode != 0) {
-        writeInfo("Failed queueing MQTT message #%d, errorCode: %d", qMsg.msg.message.id, errorCode);
+        writeError("Failed queueing MQTT message #%d, errorCode: %d", qMsg.msg.message.id, errorCode);
         goto cleanUp;
     }
 
