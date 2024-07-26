@@ -215,7 +215,7 @@ int32_t initSingleTask(taskTypeId_t id)
     return U_ERROR_COMMON_SUCCESS;
 }
 
-bool checkTaskEnabled(char *name)
+bool checkTaskEnabled(const char *name)
 {
     bool enabled = true;
     char taskName[50];
