@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/*
+ * These functions are for adapting to different file systems.
+ * Windows, Rasp PI, embedded etc. 
+ * You will need to add your own #define here, or adapt the CMAKE 
+ * to pull in the "FileSystem.c" file for your adapted platform.
+ * Currently this is just for Windows and Rasp PI.
+ */
+
 #include <stdio.h>
 #include "fileSystem.h"
 

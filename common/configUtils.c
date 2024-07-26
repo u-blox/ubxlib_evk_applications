@@ -334,7 +334,7 @@ bool setBoolParamFromConfig(const char *key, const char *compare, bool *param)
 
 /// @brief      Checks if a parameter exists in the configuration
 /// @param key  The parameter to check for
-/// @return     A valude indicating whether the parameter is in the config
+/// @return     A value indicating whether the parameter is in the config
 bool paramExistInConfig(const char *key)
 {
     const char *value = getConfig(key);
